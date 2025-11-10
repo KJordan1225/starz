@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Stancl\Tenancy\Database\Concerns\BelongsToTenant; // << key trait
 
 class User extends Authenticatable
@@ -43,5 +44,13 @@ class User extends Authenticatable
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Tenant::class, 'tenant_id', 'id');
+    }    
+
+    public function roles()
+    {
+        return $this->belongsToMany(\App\Models\Role::class)
+                    ->withPivot('tenant_id')
+                    ->withTimestamps();
     }
+
 }
