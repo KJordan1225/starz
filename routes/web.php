@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MicrositeController;
+use App\Http\Controllers\TenantHomeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -35,13 +36,22 @@ Route::prefix('{tenant}')
         // Tenant-auth routes (prefixed names to avoid clashes with landlord)
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
-        }                 
+        }         
+        
+        // Tenant-auth routes (prefixed names to avoid clashes with landlord)
+        if (file_exists(__DIR__.'/tenant_auth.php')) {
+            require __DIR__.'/tenant_auth.php';
+        } 
 
-        // Route::get('/', [TenantSwitchController::class, 'loadTenantLogin'])
-        //     ->name('creator.login');
+        Route::get('/', [TenantHomeController::class, 'show'])
+            ->name('tenant.home');        
         
         // Route::get('/tenant-admin/dashboard', [DashboardController::class, 'tenantAdminDashboard'])
-        //     ->name('tenant.admin.dashboard'); 
+        //     ->name('tenant.admin.dashboard');
+        
+        // Route::get('/', function () {
+        //     return view('tenant.home');
+        // })->name('tenant.home');
           
         
     });
