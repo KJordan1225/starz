@@ -225,7 +225,7 @@
                            class="btn btn-primary btn-lg">Register/Login to Become a Creator</a>
                         <a href="#"
                            class="btn btn-outline-primary">Choose a Plan</a>
-                        <a href="#"
+                        <a href="{{ route('landlord.create.microsite') }}"
                            class="btn btn-outline-primary">Establish Your Micro-site</a>
                         <a href="#"
                            class="btn btn-outline-primary">Onboard with Stripe</a>                        
