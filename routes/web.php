@@ -38,10 +38,6 @@ Route::prefix('{tenant}')
             require __DIR__.'/tenant_auth.php';
         }         
         
-        // Tenant-auth routes (prefixed names to avoid clashes with landlord)
-        if (file_exists(__DIR__.'/tenant_auth.php')) {
-            require __DIR__.'/tenant_auth.php';
-        } 
 
         Route::get('/', [TenantHomeController::class, 'show'])
             ->name('tenant.home');        

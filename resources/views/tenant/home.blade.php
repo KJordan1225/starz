@@ -154,14 +154,16 @@
             </form>
 
             {{-- Optional: register link --}}
-            @if (Route::has('tenant.register'))
-              <div class="text-center mt-3">
-                <span class="small text-muted">New here?</span>
-                <a class="small ms-1" href="{{ route('tenant.register', ['tenant' => $tenantId]) }}">
-                  Create an account
-                </a>
-              </div>
-            @endif
+          
+            <div class="text-center mt-3">
+              <span class="small text-muted" style="color:#000000;">New here?</span>
+              <a class="small ms-1" href="{{ route('tenant.register', ['tenant' => $tenantId]) }}"
+                style="color:#000000; text-decoration: underline;">
+                Create an account
+              </a>
+            </div>
+          
+
           </div>
         </div>
 
