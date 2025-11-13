@@ -30,19 +30,17 @@ Route::post('/microsite/create', [MicrositeController::class, 'store'])
 
 // ----- Tenant (PATH-based: /{tenant}/...) -----
 Route::prefix('{tenant}')
-    ->middleware(['tenant.web']) // <-- uses the group defined in bootstrap/app.php
+    ->middleware(['web', 'tenant']) 
     ->group(function () {
-        // Tenant-auth routes (prefixed names to avoid clashes with landlord)
-        if (file_exists(__DIR__.'/tenant_auth.php')) {
-            require __DIR__.'/tenant_auth.php';
-        }        
+        // Tenant-auth routes
+        if (file_exists(__DIR__ . '/tenant_auth.php')) {
+            require __DIR__ . '/tenant_auth.php';
+        }
 
-        // Route::get('/', [TenantSwitchController::class, 'loadTenantLogin'])
-        //     ->name('creator.login');
+        Route::get('login', function () {
+            return view('tenant.login');
+        })->name('tenant.login');
+    });
 
-        // Route::get('/clearMediaCollections', [PostController::class, 'clearMediaCollections'])
-        //     ->name('tenant.posts.clearMediaCollections');
-
-        });
 
 require __DIR__.'/auth.php';
