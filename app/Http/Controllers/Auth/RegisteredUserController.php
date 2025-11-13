@@ -23,6 +23,12 @@ class RegisteredUserController extends Controller
         return view('auth.register');
     }
 
+    public function tenantCreate(Request $request): View
+    {
+        $tenantId = request()->segment(1);
+        return view('auth.tenant.register', compact('tenantId'));
+    }
+
     /**
      * Handle an incoming registration request.
      *
@@ -30,6 +36,7 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
@@ -49,6 +56,53 @@ class RegisteredUserController extends Controller
             $tAdmin = Role::firstOrCreate(['name' => 'super-admin', 'tenant_id' => $tid]);
             // Assign the roleto new user
             $user->roles()->attach($tAdmin->id, ['tenant_id' => $tenant->id ?? null]);
+        }
+
+        if ($user->name != 'Super Admin') {
+            $tid = $request->tenant_id;
+            $tAdmin = Role::firstOrCreate(['name' => 'user', 'tenant_id' => $tid]);
+            // Assign the roleto new user
+            $user->roles()->attach($tAdmin->id, ['tenant_id' => $tenant->id ?? null]);
+        }
+
+        Auth::login($user);
+
+        return redirect(route('guest.home', absolute: false));
+    }
+
+    public function tenantStore(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'tenant_id' => ['required', 'string', 'exists:tenants,id'],
+        ]);
+        
+        $user = User::create([
+            'tenant_id' => $request->tenant_id ?? null,
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        event(new Registered($user));
+
+        if ($user->name === 'Super Admin') {
+            $tid = NULL;
+            $tAdmin = Role::firstOrCreate(['name' => 'super-admin', 'tenant_id' => $tid]);
+            // Assign the roleto new user
+            $user->roles()->attach($tAdmin->id, ['tenant_id' => $tenant->id ?? null]);
+        }
+
+        if ($user->name != 'Super Admin') {
+            // $tid = NULL;
+            
+            $tUser = Role::where('name', 'user')
+                ->where('tenant_id', $request->tenant_id)
+                ->first();
+            // Assign the role to new user
+            $user->roles()->attach($tUser->id, ['tenant_id' => $request->tenant_id ?? null]);
         }
 
         Auth::login($user);

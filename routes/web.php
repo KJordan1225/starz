@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MicrositeController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -40,6 +41,11 @@ Route::prefix('{tenant}')
         Route::get('login', function () {
             return view('tenant.login');
         })->name('tenant.login');
+
+        Route::get('register', [RegisteredUserController::class, 'tenantCreate'])
+            ->name('tenant.register');
+        Route::post('register', [RegisteredUserController::class, 'tenantStore'])
+            ->name('tenant.register.store');
     });
 
 
