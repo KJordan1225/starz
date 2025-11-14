@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MicrositeController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\HomepageCarouselController;
+use App\Http\Controllers\Tenant\TenantCarouselController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -48,6 +48,21 @@ Route::prefix('{tenant}')
             ->name('tenant.register');
         Route::post('register', [RegisteredUserController::class, 'tenantStore'])
             ->name('tenant.register.store');
+
+        // Microsite homepage with tenant-scoped carousel
+        Route::get('/', [TenantCarouselController::class, 'homepage'])
+            ->name('tenant.home');
+
+        // Manage carousel (upload / clear)
+        Route::get('/carousel', [TenantCarouselController::class, 'edit'])
+            ->name('tenant.carousel.edit');
+
+        Route::post('/carousel', [TenantCarouselController::class, 'store'])
+            ->name('tenant.carousel.store');
+
+        Route::delete('/carousel', [TenantCarouselController::class, 'clear'])
+            ->name('tenant.carousel.clear');
+
     });
 
 
