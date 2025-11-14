@@ -40,9 +40,9 @@ Route::prefix('{tenant}')
             require __DIR__ . '/tenant_auth.php';
         }
 
-        Route::get('login', function () {
-            return view('tenant.login');
-        })->name('tenant.login');
+        // Route::get('login', function () {
+        //     return view('tenant.login');
+        // })->name('tenant.login');
 
         Route::get('register', [RegisteredUserController::class, 'tenantCreate'])
             ->name('tenant.register');

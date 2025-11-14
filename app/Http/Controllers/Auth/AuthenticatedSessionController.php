@@ -48,8 +48,9 @@ class AuthenticatedSessionController extends Controller
 
         $tenantId = request()->route('tenant');
         $user = auth()->user();
-        $user->hasRole('admin', $tenantId);
-        if($user)
+        
+        $isAdmin = $user->hasRole('admin', $tenantId);
+        if($isAdmin)
         {
             dd('tenant admin');
         } else {
