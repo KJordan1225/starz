@@ -34,5 +34,13 @@
             No carousel images uploaded yet for this microsite.
         </p>
     @endif
+
+    <div class="text-center">
+        <h3>Login (or Register) to view more of this model</h3>
+        <a href="{{ route('tenant.login', ['tenant'=> tenant('id')]) }}" class="btn btn-primary me-2">Login</a>
+        <a href="{{ route('tenant.register', ['tenant'=> tenant('id')]) }}" class="btn btn-secondary">Register</a>
+    </div>
+
+
 </div>
 @endsection

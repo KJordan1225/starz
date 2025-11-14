@@ -20,11 +20,41 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
+     * Display the login view.
+     */
+    public function tenantCreate(): View
+    {
+        return view('auth.tenant.login');
+    }
+
+    /**
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('dashboard', absolute: false));
+    }
+
+    /**
+     * Handle an incoming authentication request.
+     */
+    public function tenantStore(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        $tenantId = request()->route('tenant');
+        $user = auth()->user();
+        $user->hasRole('admin', $tenantId);
+        if($user)
+        {
+            dd('tenant admin');
+        } else {
+            dd('tenant user');
+        }
 
         $request->session()->regenerate();
 

@@ -97,7 +97,7 @@ class TenantCarouselController extends Controller
         $carousel = Carousel::where('tenant_id', $tenantId)->first();
 
         $carouselImages = $carousel
-            ? $carousel->getMedia('carousel_images')->take(3) // or ->take(N)
+            ? $carousel->getMedia('carousel_images')->take(5) // or ->take(N)
             : collect();
 
         return view('tenant.home', [

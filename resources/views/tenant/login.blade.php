@@ -114,7 +114,7 @@
                             <div class="text-center mt-3">
                                 <span class="small text-muted">New here?</span>
                                 <a class="small ms-1 link-brand"
-                                    href="{{ route('register', ['tenant' => $tenantId]) }}">
+                                    href="{{ route('tenant.register', ['tenant' => $tenantId]) }}">
                                     Create an account
                                 </a>
                             </div>
