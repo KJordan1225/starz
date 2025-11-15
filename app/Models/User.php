@@ -80,9 +80,10 @@ class User extends Authenticatable
 
         return $this->roles()
             ->where('roles.name', $role)
-            ->when($tenantId !== null, fn ($q) => $q->wherePivot('tenant_id', $tenantId))
-            ->when($tenantId === null, fn ($q) => $q->whereNull('role_user.tenant_id'))
+            ->when($tenantId !== null, fn ($q) => $q->where('role_user.tenant_id', $tenantId))  // Correct pivot column reference
+            ->when($tenantId === null, fn ($q) => $q->whereNull('role_user.tenant_id'))  // Correct pivot column reference
             ->exists();
+
     }
 
     /**

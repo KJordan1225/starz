@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MicrositeController;
+use App\Http\Controllers\Tenant\TenantVideoController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
 
@@ -52,16 +53,29 @@ Route::prefix('{tenant}')
         // Microsite homepage with tenant-scoped carousel
         Route::get('/', [TenantCarouselController::class, 'homepage'])
             ->name('tenant.home');
+        Route::get('/showSubscribe', [TenantCarouselController::class, 'showSubscribe'])
+            ->name('tenant.show.subscribe');
+
 
         // Manage carousel (upload / clear)
         Route::get('/carousel', [TenantCarouselController::class, 'edit'])
             ->name('tenant.carousel.edit');
-
         Route::post('/carousel', [TenantCarouselController::class, 'store'])
             ->name('tenant.carousel.store');
-
         Route::delete('/carousel', [TenantCarouselController::class, 'clear'])
             ->name('tenant.carousel.clear');
+
+        Route::get('/carousel/video', [TenantCarouselController::class, 'videoEdit'])
+            ->name('tenant.carousel.video.edit');
+        Route::post('/carousel/video', [TenantCarouselController::class, 'videoStore'])
+            ->name('tenant.carousel.video.store');
+        Route::delete('/carousel/video', [TenantCarouselController::class, 'videoClear'])
+            ->name('tenant.carousel.video.clear');
+
+        // Display Creator Video
+        Route::get('/videos', [TenantVideoController::class, 'index'])
+            ->name('tenant.videos.index');
+
 
     });
 

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Tenant;
 
-use App\Http\Controllers\Controller;
 use App\Models\Carousel;
+use App\Models\TenantVideo;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Spatie\MediaLibrary\Conversions\ImageGenerators\Video;
 
 class TenantCarouselController extends Controller
 {
@@ -105,4 +107,106 @@ class TenantCarouselController extends Controller
             'tenantId'       => $tenantId,
         ]);
     }
+
+    /**
+     * Show the microsite homepage with a tenant-scoped carousel.
+     */
+    public function showSubscribe(Request $request)
+    {
+        $tenantId = tenant('id');
+
+        $carousel = Carousel::where('tenant_id', $tenantId)->first();
+
+        $carouselImages = $carousel
+            ? $carousel->getMedia('carousel_images')->take(5) // or ->take(N)
+            : collect();
+
+        return view('tenant.carousel.showSubscribe', [
+            'carouselImages' => $carouselImages,
+            'tenantId'       => $tenantId,
+        ]);
+    }
+
+
+    /**
+     * Show the upload/manage page for this tenant's carousel.
+     */
+    public function videoEdit(Request $request)
+    {
+        $tenantId = tenant('id'); // from stancl/tenancy helper
+
+        // One carousel row per tenant
+        $carousel = TenantVideo::firstOrCreate(
+            ['tenant_id' => $tenantId],
+            [
+                'title'       => 'Creator Video',
+                'description' => 'Video for ' . $tenantId,
+            ]
+        );
+
+        // All images for this tenant's carousel
+        $images = $carousel->getMedia('tenant_images');      
+
+        return view('tenant.carousel.video.edit', [
+            'carousel' => $carousel,
+            'images'   => $images,
+        ]);
+    }
+
+
+    /**
+     * Handle upload of one or more carousel images for this tenant.
+     */
+    public function videoStore(Request $request)
+    {
+        $tenantId = tenant('id');
+
+        $request->validate([
+            'title'       => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'video'       => ['nullable', 'file', 'mimes:mp4,avi,mkv', 'max:102400'], // 100MB max for videos
+        ]);
+
+
+        $carousel = TenantVideo::firstOrCreate(
+            ['tenant_id' => $tenantId],
+            [
+                'title'       => $request->input('title', 'Homepage Carousel'),
+                'description' => $request->input('description'),
+            ]
+        );
+        
+        // Optional: update title/description per upload
+        $carousel->update([
+            'title'       => $request->input('title', $carousel->title),
+            'description' => $request->input('description', $carousel->description),
+        ]);
+
+        if ($request->hasFile('video')) {
+            foreach ($request->file('video') as $img) {
+                $carousel->addMedia($img)
+                    ->toMediaCollection('tenant_videos');
+            }
+        }
+
+        return back()->with('success', 'Carousel video uploaded for this microsite.');
+    }
+
+
+    /**
+     * Clear ONLY this tenant's carousel media.
+     */
+    public function videoClear(Request $request)
+    {
+        $tenantId = tenant('id');
+
+        $carousel = TenantVideo::where('tenant_id', $tenantId)->first();
+
+        if ($carousel) {
+            $carousel->clearMediaCollection('tenant_videos');
+        }
+
+        return back()->with('success', 'Carousel videos cleared for this microsite.');
+    }
+
 }

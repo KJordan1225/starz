@@ -46,20 +46,22 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $tenantId = request()->route('tenant');
+        $tenantId = request()->segment(1);
         $user = auth()->user();
         
         $isAdmin = $user->hasRole('admin', $tenantId);
-        if($isAdmin)
+
+        if ($isAdmin)
         {
-            dd('tenant admin');
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('dashboard', absolute: false));
         } else {
-            dd('tenant user');
-        }
+            $request->session()->regenerate();
 
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()->intended(route('tenant.show.subscribe', ['tenant' => $tenantId], absolute: false));
+        } 
+    
     }
 
     /**
