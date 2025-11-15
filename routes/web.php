@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MicrositeController;
 use App\Http\Controllers\Tenant\TenantVideoController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\PrivateTenantImagesController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
 
 Route::get('/', function () {
@@ -65,16 +66,29 @@ Route::prefix('{tenant}')
         Route::delete('/carousel', [TenantCarouselController::class, 'clear'])
             ->name('tenant.carousel.clear');
 
-        Route::get('/carousel/video', [TenantCarouselController::class, 'videoEdit'])
-            ->name('tenant.carousel.video.edit');
-        Route::post('/carousel/video', [TenantCarouselController::class, 'videoStore'])
-            ->name('tenant.carousel.video.store');
-        Route::delete('/carousel/video', [TenantCarouselController::class, 'videoClear'])
-            ->name('tenant.carousel.video.clear');
+        // Manage private creator images (upload / clear)
+        Route::get('/creator/images', [PrivateTenantImagesController::class, 'creatorImageEdit'])
+            ->name('tenant.creator.images.edit');
+        Route::post('/creator/images', [PrivateTenantImagesController::class, 'creatorImageStore'])
+            ->name('tenant.creator.images.store');
+        Route::delete('/creator/images/clear', [PrivateTenantImagesController::class, 'creatorImageClear'])
+            ->name('tenant.creator.image.clear');
+
+        // Display all tenant images in rows of 4
+        Route::get('/creator/images/display', [PrivateTenantImagesController::class, 'creatorImagePageTwo'])
+            ->name('tenant.creator.images.creatorImagePageTwo');
+
+
+        // Route::get('/carousel/video', [TenantCarouselController::class, 'videoEdit'])
+        //     ->name('tenant.carousel.video.edit');
+        // Route::post('/carousel/video', [TenantCarouselController::class, 'videoStore'])
+        //     ->name('tenant.carousel.video.store');
+        // Route::delete('/carousel/video', [TenantCarouselController::class, 'videoClear'])
+        //     ->name('tenant.carousel.video.clear');
 
         // Display Creator Video
-        Route::get('/videos', [TenantVideoController::class, 'index'])
-            ->name('tenant.videos.index');
+        // Route::get('/videos', [TenantVideoController::class, 'index'])
+        //     ->name('tenant.videos.index');
 
 
     });

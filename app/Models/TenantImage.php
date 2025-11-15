@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Tenant_Image extends Model implements HasMedia
+class TenantImage extends Model implements HasMedia
 {
     use BelongsToTenant, InteractsWithMedia;
 
@@ -17,12 +17,9 @@ class Tenant_Image extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('tenant_images')
-            ->useDisk('public') // Optional, specify disk if needed
-            ->acceptsFile(function (File $file) {
-                return in_array($file->mimeType(), ['image/jpeg', 'image/png', 'image/gif']);
-            });
-
+        $this->addMediaCollection('tenant_images');
     }
+
+
 }
 

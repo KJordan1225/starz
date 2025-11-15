@@ -145,7 +145,7 @@ class TenantCarouselController extends Controller
         );
 
         // All images for this tenant's carousel
-        $images = $carousel->getMedia('tenant_images');      
+        $images = $carousel->getMedia('tenant_videos');      
 
         return view('tenant.carousel.video.edit', [
             'carousel' => $carousel,
@@ -164,7 +164,7 @@ class TenantCarouselController extends Controller
         $request->validate([
             'title'       => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'video'       => ['nullable', 'file', 'mimes:mp4,avi,mkv', 'max:102400'], // 100MB max for videos
+            'video'       => ['nullable', 'file', 'mimes:mp4,avi,mkv', 'max:1024000'], // 100MB max for videos
         ]);
 
 
@@ -182,11 +182,11 @@ class TenantCarouselController extends Controller
             'description' => $request->input('description', $carousel->description),
         ]);
 
-        if ($request->hasFile('video')) {
-            foreach ($request->file('video') as $img) {
-                $carousel->addMedia($img)
+        if ($request->hasFile('video') && $request->file('video')->isValid()) {
+            $carousel->addMedia($request->file('video'))
                     ->toMediaCollection('tenant_videos');
-            }
+        } else {
+            return back()->with('error', 'There was an issue with the video upload.');
         }
 
         return back()->with('success', 'Carousel video uploaded for this microsite.');
