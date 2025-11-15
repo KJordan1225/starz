@@ -21,4 +21,27 @@ class TenantVideoController extends Controller
 
         return view('tenant.carousel.video.index', compact('videos'));
     }
+
+
+    /**
+     * Show the microsite homepage with a tenant-scoped carousel.
+     */
+    public function creatorVideoPage(Request $request)
+    {
+        $tenantId = tenant('id');
+
+        $carousel = TenantVideo::where('tenant_id', $tenantId)
+            ->with('media')
+            ->first();
+
+        $carouselImages = $carousel
+            ? $carousel->getMedia('tenant_videos') // or ->take(N)
+            : collect();
+
+        return view('tenant.creator.video.show', [
+            'videos' => $carouselImages,
+            'tenantId'       => $tenantId,
+        ]);
+    }
+
 }

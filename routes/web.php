@@ -79,16 +79,16 @@ Route::prefix('{tenant}')
             ->name('tenant.creator.images.creatorImagePageTwo');
 
 
-        // Route::get('/carousel/video', [TenantCarouselController::class, 'videoEdit'])
-        //     ->name('tenant.carousel.video.edit');
-        // Route::post('/carousel/video', [TenantCarouselController::class, 'videoStore'])
-        //     ->name('tenant.carousel.video.store');
-        // Route::delete('/carousel/video', [TenantCarouselController::class, 'videoClear'])
-        //     ->name('tenant.carousel.video.clear');
+        Route::get('/creator/video', [TenantCarouselController::class, 'videoEdit'])
+            ->name('tenant.creator.video.edit');
+        Route::post('/creator/video', [TenantCarouselController::class, 'videoStore'])
+            ->name('tenant.creator.video.store');
+        Route::delete('/creator/video', [TenantCarouselController::class, 'videoClear'])
+            ->name('tenant.creator.video.clear');
 
         // Display Creator Video
-        // Route::get('/videos', [TenantVideoController::class, 'index'])
-        //     ->name('tenant.videos.index');
+        Route::get('/creator/videos/show', [TenantVideoController::class, 'creatorVideoPage'])
+            ->name('tenant.creator.video.show');
 
 
     });

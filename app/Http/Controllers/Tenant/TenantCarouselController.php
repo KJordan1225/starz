@@ -145,11 +145,11 @@ class TenantCarouselController extends Controller
         );
 
         // All images for this tenant's carousel
-        $images = $carousel->getMedia('tenant_videos');      
+        $images = $carousel->getMedia('tenant_videos'); 
 
-        return view('tenant.carousel.video.edit', [
+        return view('tenant.creator.video.edit', [
             'carousel' => $carousel,
-            'images'   => $images,
+            'videos'   => $images,
         ]);
     }
 
@@ -209,4 +209,5 @@ class TenantCarouselController extends Controller
         return back()->with('success', 'Carousel videos cleared for this microsite.');
     }
 
+    
 }

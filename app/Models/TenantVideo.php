@@ -17,12 +17,8 @@ class TenantVideo extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-          // New media collection for videos
-        $this->addMediaCollection('tenant_videos')
-            ->useDisk('public') // Optional, specify disk if needed
-            ->acceptsFile(function (File $file) {
-                return in_array($file->mimeType(), ['video/mp4', 'video/avi', 'video/mkv']); // Allow video formats
-            });
+        // New media collection for videos
+        $this->addMediaCollection('tenant_videos');
 
     }
 }
