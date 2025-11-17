@@ -5,9 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-// If you use this in your app:
-use App\Models\Concerns\BelongsToTenant;
+use Stancl\Tenancy\Database\Concerns\BelongsToTenant; // << key trait
 
 class User extends Authenticatable
 {
@@ -133,4 +133,5 @@ class User extends Authenticatable
             $user->roles()->detach();
         });
     }
+
 }

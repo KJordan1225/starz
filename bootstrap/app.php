@@ -20,15 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            // Initialize tenancy from a path parameter {tenant}
-            'tenant'          => InitializeTenancyByPath::class,
-            // Helper to auto-inject {tenant} into route() URLs while inside tenant pages
-            'tenant.defaults' => SetTenantRouteDefaults::class,
-            'universal'       => PreventAccessFromCentralDomains::class,
-            'ctx.tenant'      => AttachTenantContext::class,
-            'noselfsub'       => PreventSelfSubscription::class,
+            'tenant'          => TenantMiddleware::class,
+            'tenant.defaults' => TenantDefaults::class,
         ]);
-
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

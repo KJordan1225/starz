@@ -19,8 +19,8 @@ class MicrositeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'id'             => ['required', 'string', 'max:191', 'unique:tenants,id'],
-            'display_name'   => ['required', 'string', 'max:255'],		
+            'id'             => ['required', 'string', 'regex:/^[a-z0-9_-]+$/', 'max:191', 'unique:tenants,id'],
+            'display_name'   => ['required', 'string', 'max:255'],           
 
             // Validation for email, password, and confirm password
             'email' => [
@@ -37,7 +37,7 @@ class MicrositeController extends Controller
         $tenant =Tenant::create([
             'id'   => $data['id'],
             'data' => [],
-            'display_name' => $data['display_name'], // Adjust domain as needed		
+            'display_name' => $data['display_name'], // Adjust domain as needed
             'creator_email' => $data['email'],
         ]);
 
@@ -47,11 +47,11 @@ class MicrositeController extends Controller
         // Roles
         $tAdmin = Role::firstOrCreate(['name' => 'admin', 'tenant_id' => $tid]);
         $tUser  = Role::firstOrCreate(['name' => 'user',  'tenant_id' => $tid]);
-
+       
         // (Optional) auto-assign the creating user as tenant admin:
-        if (auth()->check()) {
-            auth()->user()->roles()->syncWithoutDetaching([$tAdmin->id]);
-        }
+        // if (auth()->check()) {
+        //     auth()->user()->roles()->syncWithoutDetaching([$tAdmin->id]);
+        // }
 
         // 3) Register the user within the tenant
         // Create the user
