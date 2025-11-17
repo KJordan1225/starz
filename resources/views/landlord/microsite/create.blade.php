@@ -22,7 +22,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('landlord.store.microsite') }}" class="row g-4">
+    <form method="POST" action="{{ route('landlord.microsite.store') }}" class="row g-4">
         @csrf
 
         {{-- Tenant ID / Slug (primary key used by stancl/tenancy) --}}

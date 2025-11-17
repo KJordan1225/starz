@@ -4,11 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use App\Models\User;
-use App\Models\Permission;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Stancl\Tenancy\Database\Models\Tenant;
 
 class MicrositeController extends Controller
 {
@@ -70,4 +69,6 @@ class MicrositeController extends Controller
 
         return redirect()->route('guest.home')->with('status', 'Tenant created.');
     }
+
+    
 }

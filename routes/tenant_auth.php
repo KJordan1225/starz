@@ -12,16 +12,15 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
+    Route::get('register', [RegisteredUserController::class, 'tenantCreate'])
+        ->name('tenant.register');
+    Route::post('register', [RegisteredUserController::class, 'tenantStore'])
         ->name('tenant.register');
 
-    Route::post('register', [RegisteredUserController::class, 'store'])
-        ->name('tenant.register');
-
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])
+    Route::get('login', [AuthenticatedSessionController::class, 'tenantCreate'])
         ->name('tenant.login');
 
-    Route::post('login', [AuthenticatedSessionController::class, 'store'])
+    Route::post('login', [AuthenticatedSessionController::class, 'tenantStore'])
         ->name('tenant.login');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
@@ -56,6 +55,6 @@ Route::middleware('auth')->group(function () {
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
-    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
+    Route::post('logout', [AuthenticatedSessionController::class, 'tenantDestroy'])
+        ->name('tenant.logout');
 });

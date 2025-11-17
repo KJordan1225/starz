@@ -24,6 +24,12 @@ class RegisteredUserController extends Controller
         return view('auth.register');
     }
 
+    public function tenantCreate(Request $request): View
+    {
+        $tenantId = request()->segment(1);
+        return view('auth.tenant.register', compact('tenantId'));
+    }
+
     /**
      * Handle an incoming registration request.
      *
@@ -31,7 +37,7 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        dd($request);
+        
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],

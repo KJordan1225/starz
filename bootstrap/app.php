@@ -4,8 +4,13 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-use App\Http\Middleware\TenantMiddleware;
-use App\Http\Middleware\TenantDefaults;
+// Tenancy middleware
+use App\Http\Middleware\AttachTenantContext;
+use App\Http\Middleware\SetTenantRouteDefaults;
+use App\Http\Middleware\PreventSelfSubscription;
+use App\Providers\TenantBrandingServiceProvider;
+use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
+use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(

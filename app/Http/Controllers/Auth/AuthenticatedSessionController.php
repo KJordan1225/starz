@@ -7,8 +7,8 @@ use Stancl\Tenancy\Tenancy;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\RedirectResponse;
-use App\Http\Requests\Auth\LoginRequest;
+use Illuminate\View\View;
+use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -21,76 +21,94 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
+     * Display the login view.
+     */
+    public function tenantCreate(): View
+    {
+        return view('auth.tenant.login');
+    }
+
+    /**
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // Authenticate the user
         $request->authenticate();
+
+        // Regenerate the session to prevent session fixation attacks
         $request->session()->regenerate();
 
-        $credentials = $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
+        // Retrieve the authenticated user
+        $user = Auth::user();
 
-        $user = $request->user();
+        $tenantId = $user->tenant_id;        
 
-        // Detect (or gently initialize) tenant context
-        /** @var Tenancy $tenancy */
-        $tenancy  = app(Tenancy::class);
-        $isTenant = tenancy()->initialized ? true : false;
-
-        // Extract first segment from url
-        // Get the full URL path
-            $urlPath = parse_url(request()->getRequestUri(), PHP_URL_PATH);
-            // Remove the leading slash and split the URL into segments
-            $segments = explode('/', trim($urlPath, '/'));
-            // Get the first segment
-            $firstSegment = $segments[0] ?? null; 
-
-
-        if (! $isTenant) {
-            // Optional: try to initialize from route param if present
-            if ($tenantParam = request()->query('tenant')) {
-                $tenantModel = \App\Models\Tenant::query()
-                    ->where('id', $tenantParam)
-                    ->first();
-                if ($tenantModel) {
-                    $tenancy->initialize($tenantModel);
-                    $isTenant = true;
-                }
-            }
+        // Check the user's role and redirect accordingly
+        if ($user->hasRole('super-admin')) {
+            // Redirect to the admin dashboard if the user has the admin role
+            return redirect()->route('super-admin.dashboard');
         }
 
-        $tenantId = $isTenant ? tenant('id') : null;
-        // 1) Landlord-level super admin?
-        if ($user->hasRole('super-admin', null)) {
-            dd('super admin');
-        //    return redirect()->intended(route('landlord.dashboard.index')); // adjust to your landlord route name
+        if ($user->hasRole('admin', $tenantId) && $tenantId !== null) {
+            // Redirect to the admin dashboard if the user has the admin role
+            return redirect()->intended(route('tenant.admin.home', ['tenant' => $tenantId], absolute: false));
         }
-        // 2) Tenant admin?
-        if ($isTenant && $user->hasRole('admin', $tenantId)) {
-            dd('tenant admin');
-            // return redirect()
-            //     ->intended(route('tenant.admin.dashboard', ['tenant' => $tenantId]))
-            //     ->with([
-            //         'user_id'   => $user->id,
-            //     ]);                      
+
+        if ($user->hasRole('user', $tenantId) && $tenantId !== null) {            
+            // Redirect to the user dashboard if the user has the user role
+            return redirect()->intended(route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId], absolute: false));
         }
+
+        // Default redirect (if no specific role is matched)
+        return redirect()->intended(route('dashboard', absolute: false));
+        // return redirect()->intended(route('dashboard', absolute: false));
+
+    }
+
+    /**
+     * Handle an incoming authentication request.
+     */
+    public function tenantStore(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        $tenantId = request()->segment(1);
+        $user = auth()->user();
         
-        if ($isTenant) { 
-            dd('tenant user');          
-            // return redirect()->intended(route('tenant.landing', ['tenant' => $tenantId]));                       
-        }
+        $isAdmin = $user->hasRole('admin', $tenantId);
 
-        // 4) Fallback: central guest
-        return redirect()->intended(route('tenant.landing', ['tenant' => $tenantId]));
+        if ($isAdmin)
+        {
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('tenant.admin.home', ['tenant' => $tenantId], absolute: false));
+        } else {
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId], absolute: false));
+        } 
+    
     }
 
     /**
      * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    }
+
+    /**
+     * Destroy an authenticated session.
+     */
+    public function tenantDestroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 
