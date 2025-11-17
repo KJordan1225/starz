@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -32,11 +33,37 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // Authenticate the user
         $request->authenticate();
 
+        // Regenerate the session to prevent session fixation attacks
         $request->session()->regenerate();
 
+        // Retrieve the authenticated user
+        $user = Auth::user();
+
+        $tenantId = $user->tenant_id;        
+
+        // Check the user's role and redirect accordingly
+        if ($user->hasRole('super-admin')) {
+            // Redirect to the admin dashboard if the user has the admin role
+            return redirect()->route('super-admin.dashboard');
+        }
+
+        if ($user->hasRole('admin', $tenantId) && $tenantId !== null) {
+            // Redirect to the admin dashboard if the user has the admin role
+            return redirect()->intended(route('tenant.admin.home', ['tenant' => $tenantId], absolute: false));
+        }
+
+        if ($user->hasRole('user', $tenantId) && $tenantId !== null) {            
+            // Redirect to the user dashboard if the user has the user role
+            return redirect()->intended(route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId], absolute: false));
+        }
+
+        // Default redirect (if no specific role is matched)
         return redirect()->intended(route('dashboard', absolute: false));
+        // return redirect()->intended(route('dashboard', absolute: false));
+
     }
 
     /**
@@ -55,11 +82,11 @@ class AuthenticatedSessionController extends Controller
         {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()->intended(route('tenant.admin.home', ['tenant' => $tenantId], absolute: false));
         } else {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('tenant.show.subscribe', ['tenant' => $tenantId], absolute: false));
+            return redirect()->intended(route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId], absolute: false));
         } 
     
     }
@@ -68,6 +95,20 @@ class AuthenticatedSessionController extends Controller
      * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    }
+
+    /**
+     * Destroy an authenticated session.
+     */
+    public function tenantDestroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 

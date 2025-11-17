@@ -73,16 +73,19 @@ class User extends Authenticatable
      */
     public function hasRole(Role|string $role, ?string $tenantId = null): bool
     {
+        
         if ($role instanceof Role) {
             $tenantId = $tenantId ?? $role->tenant_id;
             $role = $role->name;
         }
 
-        return $this->roles()
+        $hasRole = $this->roles()
             ->where('roles.name', $role)
             ->when($tenantId !== null, fn ($q) => $q->where('role_user.tenant_id', $tenantId))  // Correct pivot column reference
             ->when($tenantId === null, fn ($q) => $q->whereNull('role_user.tenant_id'))  // Correct pivot column reference
-            ->exists();
+            ->exists();        
+        
+        return $hasRole;
 
     }
 

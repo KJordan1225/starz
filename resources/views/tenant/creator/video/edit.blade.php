@@ -11,7 +11,7 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <h2 class="mb-3">Manage Carousel Imagess for {{ $tenantId ?? tenant('id') }}</h2>
+    <h2 class="mb-3">Manage Carousel Videos for {{ $tenantId ?? tenant('id') }}</h2>
 
     {{-- Upload form --}}
     <form action="{{ route('tenant.creator.video.store', ['tenant' => tenant('id')]) }}"
@@ -39,7 +39,7 @@
                 <div class="text-danger small">{{ $message }}</div> 
             @enderror
         </div>       
-        <button type="submit" class="btn btn-primary">Upload Images</button>
+        <button type="submit" class="btn btn-primary">Upload Video</button>
     </form>
 
     {{-- Clear collection button --}}

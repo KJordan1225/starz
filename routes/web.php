@@ -2,11 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MicrositeController;
 use App\Http\Controllers\Tenant\TenantVideoController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\PrivateTenantImagesController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
+
+if (file_exists(__DIR__ . '/auth.php')) {
+    require __DIR__ . '/auth.php';
+} 
 
 Route::get('/', function () {
     return view('welcome');
@@ -15,6 +20,10 @@ Route::get('/', function () {
 Route::get('/home', function () {
     return view('guest.home');
 })->name('guest.home');
+
+Route::get('login', function () {
+    return view('tenant.login');
+})->name('login');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -26,6 +35,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+//----- Route to SuperAdmin Dashboard
+Route::get('/superAdmin/dashboard', [DashboardController::class, 'superAdminDashboard'])
+    ->name('super-admin.dashboard');
+
 //----- Microsite Creation Route -----
 Route::get('/microsite/create', [MicrositeController::class, 'show'])
     ->name('landlord.microsite.create');
@@ -40,11 +54,11 @@ Route::prefix('{tenant}')
         // Tenant-auth routes
         if (file_exists(__DIR__ . '/tenant_auth.php')) {
             require __DIR__ . '/tenant_auth.php';
-        }
+        }        
 
-        // Route::get('login', function () {
-        //     return view('tenant.login');
-        // })->name('tenant.login');
+        Route::get('/tenant/admin/home', function () {
+            return view('tenant.admin.home');
+        })->name('tenant.admin.home');
 
         Route::get('register', [RegisteredUserController::class, 'tenantCreate'])
             ->name('tenant.register');

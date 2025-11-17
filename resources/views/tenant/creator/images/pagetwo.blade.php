@@ -1,8 +1,12 @@
 @extends('layouts.landlord')
 
 @section('content')
+@php
+    $tenantId = request()->segment(1) ? request()->segment(1) : request()->route('tenant');
+    $tenant = \App\Models\Tenant::find($tenantId);
+@endphp
 <div class="container my-4">
-    <h2 class="mb-4">Tenant Images</h2>
+    <h2 class="mb-4">Creator Exclusive Images for {{ $tenant->id }}</h2>
 
     {{-- Display images in rows of 4 --}}
     <div class="row">

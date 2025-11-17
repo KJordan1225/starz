@@ -7,7 +7,7 @@
 
     {{-- Bootstrap 5 (CDN). Swap with @vite if you bundle locally. --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-   
+    <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
 
     @stack('styles')
 </head>
@@ -78,7 +78,7 @@
                     <span class="text-white-50 small d-none d-sm-inline">
                         Logged in: <strong>{{ auth()->user()->name }}</strong>
                     </span>
-                    <form method="POST" action="#" class="m-0">
+                    <form method="POST" action="{{ route('tenant.logout', ['tenant' => request()->segment(1)]) }}" class="m-0">
                         @csrf
                         <button class="btn btn-sm btn-light" type="submit">Log out</button>
                     </form>
@@ -195,7 +195,7 @@
 
     {{-- Bootstrap JS --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     @stack('scripts')
 </body>
 </html>
