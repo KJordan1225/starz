@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container my-4">
-
+    <a href="{{ route('tenant.admin.home', ['tenant'=>tenant('id')]) }}">Admin Dashboard</a>
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif

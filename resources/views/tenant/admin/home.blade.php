@@ -4,7 +4,7 @@
 @php
     $tenantId = request()->segment(1) ? request()->segment(1) : request()->route('tenant');
 @endphp
-<div class="container my-4">
+<div class="container my-4">    
     <div class="row justify-content-center">
         <!-- Admin Navigation Card -->
         <div class="col-md-6">
