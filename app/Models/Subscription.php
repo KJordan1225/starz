@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class Subscription extends Model
 {
     protected $fillable = [
+        'provider',              // <--- NEW
         'tenant_id',
         'user_id',
         'subscription_plan_id',
         'paypal_subscription_id',
+        'stripe_subscription_id', // <--- NEW
         'status',
         'starts_at',
         'ends_at',
@@ -24,6 +26,7 @@ class Subscription extends Model
         'canceled_at'          => 'datetime',
         'cancel_at_period_end' => 'boolean',
     ];
+
 
     public function plan()
     {

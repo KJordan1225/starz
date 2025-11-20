@@ -4,13 +4,16 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MicrositeController;
+use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\Tenant\TenantVideoController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\PrivateTenantImagesController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
-use App\Http\Controllers\Tenant\CreatorSubscriptionPlanController;
+use App\Http\Controllers\Tenant\StripeCreatorPlanController;
 use App\Http\Controllers\Tenant\TenantSubscriptionController;
-use App\Http\Controllers\PayPalWebhookController;
+use App\Http\Controllers\Tenant\CreatorSubscriptionPlanController;
+use App\Http\Controllers\Tenant\StripeTenantSubscriptionController;
+use App\Http\Controllers\Tenant\OnboardStripeController;
 
 
 if (file_exists(__DIR__ . '/auth.php')) {
@@ -58,7 +61,36 @@ Route::prefix('{tenant}')
         // Tenant-auth routes
         if (file_exists(__DIR__ . '/tenant_auth.php')) {
             require __DIR__ . '/tenant_auth.php';
-        }        
+        }    
+        
+        // Stripe Connect onboarding
+        Route::get('/stripe/onboard', [OnboardStripeController::class, 'start'])
+            ->name('tenant.stripe.onboard.start');
+        Route::get('/stripe/onboard/complete', [OnboardStripeController::class, 'complete'])
+            ->name('tenant.stripe.onboard.complete');
+
+
+        // Creator config for Stripe plan
+        Route::get('/creator/stripe-plan', [StripeCreatorPlanController::class, 'edit'])
+            ->name('tenant.stripe.plan.edit');
+        Route::post('/creator/stripe-plan', [StripeCreatorPlanController::class, 'update'])
+            ->name('tenant.stripe.plan.update');
+        // Subscription provider choice (Stripe vs PayPal)
+        Route::get('/subscriptions/choose', function () {
+            $tenantId = tenant('id');
+            $plan = \App\Models\SubscriptionPlan::where('tenant_id', $tenantId)->first();
+            return view('tenant.subscriptions.choose', compact('plan'));
+        })->name('tenant.subscriptions.choose');
+        // Stripe-only subscription flow
+        Route::get('/stripe/subscriptions', [StripeTenantSubscriptionController::class, 'index'])
+            ->name('tenant.stripe.subscriptions.index');
+        Route::post('/stripe/subscriptions/start', [StripeTenantSubscriptionController::class, 'start'])
+            ->name('tenant.stripe.subscriptions.start');
+        Route::get('/stripe/subscriptions/success', [StripeTenantSubscriptionController::class, 'success'])
+            ->name('tenant.stripe.subscriptions.success');
+        Route::get('/stripe/subscriptions/cancel', [StripeTenantSubscriptionController::class, 'cancel'])
+            ->name('tenant.stripe.subscriptions.cancel');
+
 
         Route::get('/subscriptions', [TenantSubscriptionController::class, 'index'])
             ->name('tenant.subscriptions.index');

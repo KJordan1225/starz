@@ -12,7 +12,10 @@ class SubscriptionPlan extends Model
         'currency',
         'monthly_price',
         'paypal_plan_id',
+        'stripe_product_id',
+        'stripe_price_id',
     ];
+
 
     public function tenant()
     {
