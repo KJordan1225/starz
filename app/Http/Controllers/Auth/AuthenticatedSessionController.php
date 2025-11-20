@@ -57,7 +57,12 @@ class AuthenticatedSessionController extends Controller
 
         if ($user->hasRole('user', $tenantId) && $tenantId !== null) {            
             // Redirect to the user dashboard if the user has the user role
-            return redirect()->intended(route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId], absolute: false));
+            $isSubscribed = $user->hasActiveSubscriptionForTenant($tenantId);
+            if ($isSubscribed) {
+                return redirect()->intended(route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId], absolute: false));
+            } else {
+                return redirect()->route('tenant.subscriptions.choose', ['tenant' => $tenantId]);
+            }
         }
 
         // Default redirect (if no specific role is matched)

@@ -17,6 +17,10 @@
                     <a href="{{ route('tenant.creator.images.edit', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Upload Exclusive Images</a>
                     <a href="{{ route('tenant.creator.video.edit', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Upload Exclusive Videos</a>
                     <a href="{{ route('tenant.carousel.edit', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Upload Homepage Preview Images</a>
+                    <a href="{{ route('tenant.stripe.onboard.start', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">[Stripe] Onboard Creator Account</a>
+                    <a href="{{ route('tenant.stripe.plan.edit', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">[Stripe] Configure Creator Subscription</a>
+                    <a href="{{ route('tenant.creator.plan.edit', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">[PayPal] Configure Creator Subscription</a>
+                    
                 </div>
             </div>
         </div>

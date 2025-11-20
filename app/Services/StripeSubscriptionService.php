@@ -106,4 +106,31 @@ class StripeSubscriptionService
     {
         return $this->client->subscriptions->retrieve($stripeSubscriptionId);
     }
+
+     /**
+     * Cancel at period end:
+     *   - Stripe will stop billing when current_period_end is reached.
+     *   - Subscription stays 'active' until then.
+     */
+    public function cancelAtPeriodEnd(string $stripeSubscriptionId): \Stripe\Subscription
+    {
+        return $this->client->subscriptions->update($stripeSubscriptionId, [
+            'cancel_at_period_end' => true,
+        ]);
+    }
+
+    /**
+     * Cancel immediately:
+     *   - Stripe ends the subscription now.
+     *   - You can control proration/invoice_now if you like.
+     */
+    public function cancelNow(string $stripeSubscriptionId): \Stripe\Subscription
+    {
+        // If you want to prorate / invoice_now, pass options here.
+        return $this->client->subscriptions->cancel($stripeSubscriptionId, [
+            'invoice_now' => false,
+            'prorate'     => false,
+        ]);
+    }    
+
 }

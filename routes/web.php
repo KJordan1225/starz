@@ -63,12 +63,23 @@ Route::prefix('{tenant}')
             require __DIR__ . '/tenant_auth.php';
         }    
         
+        // NEW: Cancel at period end
+        Route::post(
+            '/stripe/subscriptions/{subscription}/cancel-period-end',
+            [StripeTenantSubscriptionController::class, 'cancelAtPeriodEnd']
+        )->name('tenant.stripe.subscriptions.cancel.period_end');
+        // NEW: Cancel immediately
+        Route::post(
+            '/stripe/subscriptions/{subscription}/cancel-now',
+            [StripeTenantSubscriptionController::class, 'cancelNow']
+        )->name('tenant.stripe.subscriptions.cancel.now');
+        
+        
         // Stripe Connect onboarding
         Route::get('/stripe/onboard', [OnboardStripeController::class, 'start'])
             ->name('tenant.stripe.onboard.start');
         Route::get('/stripe/onboard/complete', [OnboardStripeController::class, 'complete'])
             ->name('tenant.stripe.onboard.complete');
-
 
         // Creator config for Stripe plan
         Route::get('/creator/stripe-plan', [StripeCreatorPlanController::class, 'edit'])

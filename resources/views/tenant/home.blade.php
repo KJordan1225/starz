@@ -40,6 +40,9 @@
         <a href="{{ route('tenant.login', ['tenant'=> tenant('id')]) }}" class="btn btn-primary me-2">Login</a>
         <a href="{{ route('tenant.register', ['tenant'=> tenant('id')]) }}" class="btn btn-secondary">Register</a>
     </div>
+    <div class="text-center">
+        <a href="{{ route('tenant.subscriptions.choose', ['tenant' => $tenantId]) }}">Subscribe</a>
+    </div>
 
 
 </div>

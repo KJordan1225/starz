@@ -10,6 +10,8 @@ use App\Services\StripeSubscriptionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Stripe\Exception\ApiErrorException;
+
 
 class StripeTenantSubscriptionController extends Controller
 {
@@ -122,7 +124,7 @@ class StripeTenantSubscriptionController extends Controller
             'stripe_subscription_id' => $stripeSubscriptionId,
             'status'                 => $status === 'active' ? 'active' : $status,
             'starts_at'              => Carbon::createFromTimestamp($stripeSub->start_date),
-            'ends_at'                => Carbon::createFromTimestamp($stripeSub->start_date),
+            'ends_at'                => Carbon::createFromTimestamp($stripeSub->start_date)->addDays(30)
         ]);
 
         return redirect()->route('tenant.stripe.subscriptions.index', ['tenant' => $tenantId])
@@ -139,4 +141,104 @@ class StripeTenantSubscriptionController extends Controller
         return redirect()->route('tenant.stripe.subscriptions.index', ['tenant' => $tenantId])
             ->with('error', 'Stripe checkout was cancelled.');
     }
+
+     /**
+     * Cancel Stripe subscription IMMEDIATELY.
+     */
+    public function cancelNow(Request $request, StripeSubscriptionService $stripeService, Subscription $subscription)
+    {
+        $tenantId = tenant('id');
+        $user     = Auth::user();
+
+        // Guard: tenant + user + provider=stripe
+        if ($subscription->tenant_id !== $tenantId ||
+            $subscription->user_id !== $user->id ||
+            $subscription->provider !== 'stripe') {
+            abort(403);
+        }
+
+        if (! $subscription->isActive() || ! $subscription->stripe_subscription_id) {
+            return back()->with('error', 'Stripe subscription is not active.');
+        }
+
+        try {
+            $stripeSub = $stripeService->cancelNow($subscription->stripe_subscription_id);
+
+            $subscription->update([
+                'status'              => 'canceled',
+                'cancel_at_period_end'=> false,
+                'canceled_at'         => Carbon::now(),
+                'ends_at'             => Carbon::now(),
+            ]);
+
+            return back()->with('success', 'Your Stripe subscription was cancelled immediately.');
+        } catch (ApiErrorException $e) {
+            report($e);
+            $msg = 'Stripe error while cancelling now.';
+            if (app()->environment('local')) {
+                $msg .= ' '.$e->getMessage();
+            }
+            return back()->with('error', $msg);
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'Unable to cancel Stripe subscription immediately.');
+        }
+    }
+
+    /**
+     * Cancel Stripe subscription at end of current billing period.
+     *
+     * Semantics:
+     *  - We tell Stripe cancel_at_period_end = true.
+     *  - We store ends_at = current_period_end from Stripe.
+     *  - Subscription stays 'active' in our DB until ends_at.
+     */
+    public function cancelAtPeriodEnd(Request $request, StripeSubscriptionService $stripeService, Subscription $subscription)
+    {
+        $tenantId = tenant('id');
+        $user     = Auth::user();
+
+        if ($subscription->tenant_id !== $tenantId ||
+            $subscription->user_id !== $user->id ||
+            $subscription->provider !== 'stripe') {
+            abort(403);
+        }
+
+        if (! $subscription->isActive() || ! $subscription->stripe_subscription_id) {
+            return back()->with('error', 'Stripe subscription is not active.');
+        }
+
+        try {
+            // Ask Stripe to cancel at period end
+            $stripeSub = $stripeService->cancelAtPeriodEnd($subscription->stripe_subscription_id);
+
+            // Stripe will include current_period_end timestamp
+            $periodEnd = isset($stripeSub->current_period_end)
+                ? Carbon::createFromTimestamp($stripeSub->current_period_end)
+                : Carbon::now()->addMonth(); // fallback
+
+            $subscription->update([
+                'cancel_at_period_end' => true,
+                'canceled_at'          => Carbon::now(),
+                'ends_at'              => $periodEnd,
+                'status'               => 'active', // stays active until ends_at
+            ]);
+
+            return back()->with(
+                'success',
+                'Your Stripe subscription will remain active until '. $periodEnd->format('Y-m-d').'.'
+            );
+        } catch (ApiErrorException $e) {
+            report($e);
+            $msg = 'Stripe error while scheduling end-of-period cancellation.';
+            if (app()->environment('local')) {
+                $msg .= ' '.$e->getMessage();
+            }
+            return back()->with('error', $msg);
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'Unable to cancel Stripe subscription at period end.');
+        }
+    }
+
 }

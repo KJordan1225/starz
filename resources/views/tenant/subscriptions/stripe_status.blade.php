@@ -27,8 +27,10 @@
                         </p>
 
                         @if(! $subscription)
+                            {{-- No Stripe subscription yet --}}
                             <div class="text-center">
-                                <form method="POST" action="{{ route('tenant.stripe.subscriptions.start', ['tenant' => tenant('id')]) }}">
+                                <form method="POST"
+                                      action="{{ route('tenant.stripe.subscriptions.start', ['tenant' => tenant('id')]) }}">
                                     @csrf
                                     <button type="submit" class="btn btn-primary btn-lg">
                                         Subscribe with Stripe
@@ -36,6 +38,7 @@
                                 </form>
                             </div>
                         @else
+                            {{-- Stripe subscription details --}}
                             <div class="mb-3 text-center">
                                 <p class="mb-1">
                                     Status:
@@ -49,12 +52,47 @@
                                 <p class="mb-1">
                                     Ends at: {{ optional($subscription->ends_at)->format('Y-m-d') ?? '—' }}
                                 </p>
+                                <p class="mb-1">
+                                    Cancel at period end:
+                                    @if($subscription->cancel_at_period_end)
+                                        <span class="badge bg-warning text-dark">Yes</span>
+                                    @else
+                                        <span class="badge bg-light text-muted">No</span>
+                                    @endif
+                                </p>
                             </div>
+                            
+                            @if($subscription->provider === 'stripe' && $subscription->isActive())
+                                <div class="d-flex justify-content-center gap-3 flex-wrap mt-3">
+                                    {{-- Cancel at period end --}}
+                                    <form method="POST"
+                                          action="{{ route('tenant.stripe.subscriptions.cancel.period_end', [
+                                              'tenant'       => tenant('id'),
+                                              'subscription' => $subscription->id,
+                                          ]) }}">
+                                        @csrf
+                                        <button type="submit"
+                                                class="btn btn-outline-warning"
+                                                onclick="return confirm('Keep access until the end of this billing period, then cancel?');">
+                                            Cancel at Period End
+                                        </button>
+                                    </form>
 
-                            <div class="text-center mt-3">
-                                {{-- Optional: cancel buttons (Stripe) --}}
-                                {{-- You can add cancel-now/cancel-at-end-of-term here later. --}}
-                            </div>
+                                    {{-- Cancel immediately --}}
+                                    <form method="POST"
+                                          action="{{ route('tenant.stripe.subscriptions.cancel.now', [
+                                              'tenant'       => tenant('id'),
+                                              'subscription' => $subscription->id,
+                                          ]) }}">
+                                        @csrf
+                                        <button type="submit"
+                                                class="btn btn-outline-danger"
+                                                onclick="return confirm('Cancel now and lose access immediately?');">
+                                            Cancel Now
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
                         @endif
                     @endif
                 </div>

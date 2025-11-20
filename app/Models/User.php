@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
+
 // If you use this in your app:
 use App\Models\Concerns\BelongsToTenant;
 
@@ -132,5 +135,31 @@ class User extends Authenticatable
         static::deleting(function (self $user) {
             $user->roles()->detach();
         });
+    }
+
+    public function isSubscribedTo()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    // Relationship to subscriptions
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Check if this user has an active subscription for the given tenant.
+     */
+    public function hasActiveSubscriptionForTenant(int|string $tenantId): bool
+    {
+        return $this->subscriptions()
+            ->where('tenant_id', $tenantId)
+            ->whereIn('status', ['active', 'trialing']) // adjust if your column is named differently
+            ->where(function ($q) {
+                $q->whereNull('ends_at')
+                  ->orWhere('ends_at', '>', Carbon::now());
+            })
+            ->exists();
     }
 }
