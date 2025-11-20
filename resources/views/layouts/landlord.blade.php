@@ -86,7 +86,7 @@
                     <span class="text-white-50 small d-none d-sm-inline">
                         Not Logged In
                     </span> 
-                    <a href="#" class="btn btn-primary btn-sm">
+                    <a href="{{ route('tenant.login', ['tenant'=> tenant('id')]) }}" class="btn btn-primary btn-sm">
                         Login
                     </a>                   
                     @endauth

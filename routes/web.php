@@ -8,6 +8,10 @@ use App\Http\Controllers\Tenant\TenantVideoController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\PrivateTenantImagesController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
+use App\Http\Controllers\Tenant\CreatorSubscriptionPlanController;
+use App\Http\Controllers\Tenant\TenantSubscriptionController;
+use App\Http\Controllers\PayPalWebhookController;
+
 
 if (file_exists(__DIR__ . '/auth.php')) {
     require __DIR__ . '/auth.php';
@@ -56,6 +60,39 @@ Route::prefix('{tenant}')
             require __DIR__ . '/tenant_auth.php';
         }        
 
+        Route::get('/subscriptions', [TenantSubscriptionController::class, 'index'])
+            ->name('tenant.subscriptions.index');
+        Route::post('/subscriptions/start', [TenantSubscriptionController::class, 'start'])
+            ->name('tenant.subscriptions.start');
+        Route::get('/subscriptions/approve', [TenantSubscriptionController::class, 'approve'])
+            ->name('tenant.subscriptions.approve');
+        Route::get('/subscriptions/cancel', [TenantSubscriptionController::class, 'cancelView'])
+            ->name('tenant.subscriptions.cancel');
+        // NEW: cancel at period end
+        Route::post('/subscriptions/{subscription}/cancel-period-end', [TenantSubscriptionController::class, 'cancelAtPeriodEnd'])
+            ->name('tenant.subscriptions.cancel.period_end');
+        // NEW: cancel immediately
+        Route::post('/subscriptions/{subscription}/cancel-now', [TenantSubscriptionController::class, 'cancelNow'])
+            ->name('tenant.subscriptions.cancel.now');
+
+
+         // Creator plan config
+        Route::get('/creator/plan', [CreatorSubscriptionPlanController::class, 'edit'])
+            ->name('tenant.creator.plan.edit');
+        Route::post('/creator/plan', [CreatorSubscriptionPlanController::class, 'update'])
+            ->name('tenant.creator.plan.update');
+
+        // Subscriber subscription flow
+        // Route::get('/subscriptions', [TenantSubscriptionController::class, 'index'])
+        //     ->name('tenant.subscriptions.index');
+        // Route::post('/subscriptions/start', [TenantSubscriptionController::class, 'start'])
+        //     ->name('tenant.subscriptions.start');
+        // Route::get('/subscriptions/approve', [TenantSubscriptionController::class, 'approve'])
+        //     ->name('tenant.subscriptions.approve');
+        // Route::get('/subscriptions/cancel', [TenantSubscriptionController::class, 'cancelView'])
+        //     ->name('tenant.subscriptions.cancel');
+
+        
         Route::get('/tenant/admin/home', function () {
             return view('tenant.admin.home');
         })->name('tenant.admin.home');
@@ -107,5 +144,8 @@ Route::prefix('{tenant}')
 
     });
 
+// PayPal webhook (not tenant-prefixed)
+Route::post('/paypal/webhook', [PayPalWebhookController::class, 'handle'])
+    ->name('paypal.webhook');
 
 require __DIR__.'/auth.php';
