@@ -37,16 +37,28 @@ return [
 
     'mailers' => [
 
-        'smtp' => [
+        // 'smtp' => [
+        //     'transport' => 'smtp',
+        //     'scheme' => env('MAIL_SCHEME', 'tls'),
+        //     'url' => env('MAIL_URL'),
+        //     'host' => env('MAIL_HOST', 'smtp.gmail.com'),
+        //     'port' => env('MAIL_PORT', 587),
+        //     'username' => env('MAIL_USERNAME'),
+        //     'password' => env('MAIL_PASSWORD'),
+        //     'timeout' => null,
+        //     'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost:8000'), PHP_URL_HOST)),
+        // ],
+
+        
+        'mailgun' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
-            'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
+            'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
+            'port' => env('MAIL_PORT', 587),
+            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'auth_mode' => null,
         ],
 
         'ses' => [
@@ -94,6 +106,12 @@ return [
                 'postmark',
             ],
         ],
+
+        // start mailtrap transport
+            'mailtrap-sdk' => [
+                'transport' => 'mailtrap-sdk'
+            ],
+            // end mailtrap transport
 
     ],
 
