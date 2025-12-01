@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Auth\Events\Registered;
 use Stancl\Tenancy\Facades\Tenancy;
+use App\Services\TenantService;
 
 class RegisteredUserController extends Controller
 {
@@ -39,6 +40,12 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         
+       
+    
+        $tenantService = new TenantService();
+        $tenantId = $tenantService->getTenantId();
+    
+       
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
@@ -46,10 +53,10 @@ class RegisteredUserController extends Controller
         ]);
 
         // Find the tenant you want to initialize
-        $tenant = Tenant::find('acme'); // or whatever your tenant ID is
+        // $tenant = Tenant::find('acme'); // or whatever your tenant ID is
 
         // Initialize tenancy
-        Tenancy::initialize($tenant);
+        // Tenancy::initialize($tenantId);
 
         
         $user = User::create([

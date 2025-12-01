@@ -42,35 +42,11 @@
     @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100">
-    @php
-use App\Models\Tenant;
 
-// Get Tenancy manager
-$tenancy = tenancy();
-
-// Default
-$tenant_id = null;
-
-// Already initialized
-if ($tenancy->initialized) {
-    $tenant_id = $tenancy->tenant?->id;
-} else {
-    // Prefer route param `{tenant}`, fall back to first segment
-    $segment = request()->route('tenant') ?? request()->segment(1);
-
-    if ($segment) {
-        $tenant = Tenant::query()
-            ->where('id', $segment)
-            // ->orWhere('slug', $segment)
-            ->first();
-
-        if ($tenant) {
-            $tenancy->initialize($tenant);
-            $tenant_id = $tenant->id;
-        }
-        // else: silently ignore non-tenant segment
-    }
-}
+ @php
+    use App\Services\TenantService;
+    $tenantService = new TenantService();
+    $tenantId = $tenantService->getTenantId();
 @endphp
 
 
@@ -146,21 +122,28 @@ if ($tenancy->initialized) {
                             Logged in:
                             <strong class="text-white">{{ auth()->user()->name }}</strong>
                         </span>
-                        <form method="POST" action="{{ route('tenant.logout', ['tenant' => $tenant_id]) }}" class="m-0">
-                            @csrf
-                            <button class="btn btn-sm btn-light w-100 w-sm-auto" type="submit">Log out</button>
-                        </form>
+                        @if (is_null($tenantId))
+                            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                                @csrf
+                                <button class="btn btn-sm btn-light w-100 w-sm-auto" type="submit">Log out</button>
+                            </form>
+                        @else
+                            <form method="POST" action="{{ route('tenant.logout', ['tenant' => $tenantId]) }}" class="m-0">
+                                @csrf
+                                <button class="btn btn-sm btn-light w-100 w-sm-auto" type="submit">Log out</button>
+                            </form>
+                        @endif
                     @else
                         <span class="text-white-50 small">
                             Not Logged In
                         </span>
-                        @if (is_null($tenant_id))
+                        @if (is_null($tenantId))
                             <a href="{{ route('login') }}"
                                class="btn btn-primary btn-sm w-100 w-sm-auto">
                                 Login
                             </a>
                         @else
-                            <a href="{{ route('tenant.login', ['tenant'=> $tenant_id]) }}"
+                            <a href="{{ route('tenant.login', ['tenant'=> $tenantId]) }}"
                                class="btn btn-primary btn-sm w-100 w-sm-auto">
                                 Login
                             </a>

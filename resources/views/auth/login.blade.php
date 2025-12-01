@@ -1,6 +1,11 @@
 @extends('layouts.landlord')
 
 @section('content')
+ @php
+    use App\Services\TenantService;
+    $tenantService = new TenantService();
+    $tenantId = $tenantService->getTenantId();
+@endphp
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-12 col-sm-10 col-md-6 col-lg-4">
@@ -63,6 +68,32 @@
                                 </div>
                             @enderror
                         </div>
+
+                        {{-- Remember + Forgot --}}
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input border border-2 border-secondary"
+                                    type="checkbox"
+                                    name="remember"
+                                    id="remember"
+                                >
+                                <label class="form-check-label" for="remember">Remember me</label>
+                            </div>
+
+                            @if (is_null($tenantId))
+                                <a class="small link-brand"
+                                href="{{ route('landlord.password.request') }}">
+                                    Forgot password?
+                                </a>
+                            @else
+                                <a class="small link-brand"
+                                href="{{ route('password.request', ['tenant' => $tenantId]) }}">
+                                    Forgot password?
+                                </a>
+                            @endif
+                        </div>
+
 
                         {{-- Submit --}}
                         <button type="submit" class="btn btn-primary w-100">

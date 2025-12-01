@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Order;
+use App\Models\Tenant;
 
 class TenantService {
     

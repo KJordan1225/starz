@@ -21,7 +21,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('password.email') }}">
+                    <form method="POST" action="{{ route('landlord.password.email') }}">
                         @csrf
 
                         {{-- Email --}}

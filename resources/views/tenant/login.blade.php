@@ -14,6 +14,12 @@
         $tenantId = request()->segment(1);
     @endphp
 
+    @php
+        use App\Services\TenantService;
+        $tenantService = new TenantService();
+        $tenantId = $tenantService->getTenantId();
+    @endphp
+
     <div class="container-fluid g-0 flex-fill">
         <div class="row g-0 min-vh-100">
 
@@ -97,10 +103,17 @@
                                     </div>
 
                                     @if (Route::has('password.request'))
-                                        <a class="small link-brand"
-                                        href="#">
-                                            Forgot password?
-                                        </a>
+                                        if (is_null($tenantId))
+                                            <a class="small link-brand"
+                                            href="{{ route('landlord.password.request') }}">
+                                                Forgot password?
+                                            </a>
+                                        @else
+                                            <a class="small link-brand"
+                                            href="{{ route('password.request', ['tenant' => $tenantId]) }}">
+                                                Forgot password?
+                                            </a>
+                                        @endif                                        
                                     @endif
                                 </div>
 
@@ -113,10 +126,17 @@
                             {{-- Optional: register link --}}                            
                             <div class="text-center mt-3">
                                 <span class="small text-muted">New here?</span>
-                                <a class="small ms-1 link-brand"
-                                    href="{{ route('tenant.register', ['tenant' => $tenantId]) }}">
-                                    Create an account
-                                </a>
+                                if (is_null($tenantId))
+                                    <a class="small link-brand"
+                                    href="{{ route('register') }}">
+                                        Create an account
+                                    </a>
+                                @else
+                                    <a class="small ms-1 link-brand"
+                                        href="{{ route('tenant.register', ['tenant' => $tenantId]) }}">
+                                        Create an account
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>
