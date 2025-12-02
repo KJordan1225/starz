@@ -19,7 +19,7 @@ class TenantVideoController extends Controller
             ? $carousel->getMedia('tenant_videos') // Get all videos
             : collect(); // Return empty collection if no media found
 
-        return view('tenant.carousel.video.index', compact('videos'));
+        return view('tenant.carousel.video.index', compact('videos')); 
     }
 
 
@@ -28,6 +28,7 @@ class TenantVideoController extends Controller
      */
     public function creatorVideoPage(Request $request)
     {
+        
         $tenantId = tenant('id');
 
         $carousel = TenantVideo::where('tenant_id', $tenantId)

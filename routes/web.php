@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MicrositeController;
 use App\Http\Controllers\Tenant\TenantVideoController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\PrivateTenantImagesController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
 

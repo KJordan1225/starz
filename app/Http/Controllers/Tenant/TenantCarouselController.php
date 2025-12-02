@@ -164,7 +164,7 @@ class TenantCarouselController extends Controller
         $request->validate([
             'title'       => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'video'       => ['nullable', 'file', 'mimes:mp4,avi,mkv', 'max:1024000'], // 100MB max for videos
+            'video'       => ['nullable', 'file', 'mimes:mp4,avi,mkv', 'max:102400000'], // 1000MB max for videos
         ]);
 
 
@@ -183,11 +183,15 @@ class TenantCarouselController extends Controller
         ]);
 
         if ($request->hasFile('video') && $request->file('video')->isValid()) {
-            $carousel->addMedia($request->file('video'))
+            $videoMedia = $carousel->addMedia($request->file('video'))
                     ->toMediaCollection('tenant_videos');
+
+            // 2) Use FFmpeg to create a thumbnail image from the video
+            $this->createVideoThumbnail($carousel, $videoMedia);
+            
         } else {
             return back()->with('error', 'There was an issue with the video upload.');
-        }
+        }        
 
         return back()->with('success', 'Carousel video uploaded for this microsite.');
     }
@@ -207,6 +211,33 @@ class TenantCarouselController extends Controller
         }
 
         return back()->with('success', 'Carousel videos cleared for this microsite.');
+    }
+
+
+    protected function createVideoThumbnail( TenantVideo $tenantVideo, \Spatie\MediaLibrary\MediaCollections\Models\Media $videoMedia): void
+    {
+        // Temp file path for the thumbnail
+        $thumbnailPath = storage_path('app/tmp/video-thumb-' . $videoMedia->id . '.jpg');
+
+        // Open the video via Laravel-FFMpeg (disk must match your media disk)
+        $disk = $videoMedia->disk ?? config('filesystems.default');
+
+        FFMpeg::fromDisk($disk)
+            ->open($videoMedia->getPathRelativeToRoot())
+            // Pick frame at 1 second (you can adjust)
+            ->getFrameFromSeconds(1)
+            ->export()
+            ->toDisk('local') // we temporarily store thumbnail on 'local'
+            ->save('tmp/video-thumb-' . $videoMedia->id . '.jpg');
+
+        // 3) Attach thumbnail as an image media item
+        $tenantVideo
+            ->addMedia($thumbnailPath)
+            ->usingFileName('video-thumb-' . $videoMedia->id . '.jpg')
+            ->toMediaCollection('tenant_video_thumbnails');
+
+        // 4) Optional: clean up temp file
+        @unlink($thumbnailPath);
     }
 
     
