@@ -56,6 +56,14 @@ Route::prefix('{tenant}')
             require __DIR__ . '/tenant_auth.php';
         }        
 
+         Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+            ->middleware('guest')
+            ->name('password.reset');
+
+        Route::post('/reset-password', [NewPasswordController::class, 'store'])
+            ->middleware('guest')
+            ->name('password.store');
+            
         Route::get('/tenant/admin/home', function () {
             return view('tenant.admin.home');
         })->name('tenant.admin.home');

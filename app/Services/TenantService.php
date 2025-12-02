@@ -33,7 +33,7 @@ class TenantService {
                 // else: silently ignore non-tenant segment
             }
         }
-        
+        // dd($segment);
         return $tenant_id;
     }
 }

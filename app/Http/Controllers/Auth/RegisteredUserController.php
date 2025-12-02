@@ -104,19 +104,22 @@ class RegisteredUserController extends Controller
      */
     public function tenantStore(Request $request): RedirectResponse
     {
-        
+       
+        $tenantService = new TenantService();
+        $tenantId = $tenantService->getTenantId();
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $tenantId = request()->segment(1);
-        // Find the tenant you want to initialize
-        $tenant = Tenant::find($tenantId); // or whatever your tenant ID is
+        // $tenantId = request()->segment(1);
+        // // Find the tenant you want to initialize
+        // $tenant = Tenant::find($tenantId); // or whatever your tenant ID is
 
         // Initialize tenancy
-        Tenancy::initialize($tenant);
+        // Tenancy::initialize($tenant);
 
         
         $user = User::create([

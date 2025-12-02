@@ -100,9 +100,7 @@
                                             id="remember"
                                         >
                                         <label class="form-check-label" for="remember">Remember me</label>
-                                    </div>
-
-                                    @if (Route::has('password.request'))
+                                    </div>                                    
                                         if (is_null($tenantId))
                                             <a class="small link-brand"
                                             href="{{ route('landlord.password.request') }}">
@@ -114,7 +112,7 @@
                                                 Forgot password?
                                             </a>
                                         @endif                                        
-                                    @endif
+                                    
                                 </div>
 
 

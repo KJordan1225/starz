@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Stancl\Tenancy\Database\Concerns\BelongsToTenant; // << key trait
+use App\Notifications\TenantResetPasswordNotification;
 
 class User extends Authenticatable
 {
@@ -132,6 +133,16 @@ class User extends Authenticatable
         static::deleting(function (self $user) {
             $user->roles()->detach();
         });
+    }
+
+
+    public function sendPasswordResetNotification($token)
+    {
+        $tenant = $this->tenant_id; // or tenant slug
+
+        $this->notify(
+            new TenantResetPasswordNotification($token, $tenant)
+        );
     }
 
 }

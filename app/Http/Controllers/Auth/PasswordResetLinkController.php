@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Password;
 
 class PasswordResetLinkController extends Controller
 {
@@ -23,22 +24,52 @@ class PasswordResetLinkController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    
+    public function store(Request $request)
     {
         $request->validate([
             'email' => ['required', 'email'],
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        // 1) Resolve tenant from route or first segment
+        $tenantKey = $request->route('tenant') ?? $request->segment(1);
 
-        return $status == Password::RESET_LINK_SENT
-                    ? back()->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        $tenant = Tenant::query()
+            ->where('id', $tenantKey)
+            // ->orWhere('slug', $tenantKey) // if you use slugs
+            ->first();
+
+        if (! $tenant) {
+            return back()->withErrors([
+                'email' => 'Invalid tenant context.',
+            ]);
+        }
+
+        // 2) Initialize tenancy context if not already
+        if (! tenancy()->initialized) {
+            tenancy()->initialize($tenant);
+        }
+
+        // 3) Make sure the email belongs to THIS tenant
+        $user = User::query()
+            ->where('email', $request->email)
+            ->where('tenant_id', $tenant->id)
+            ->first();
+
+        if (! $user) {
+            return back()->withErrors([
+                'email' => __('We can’t find a user with that email for this site.'),
+            ]);
+        }
+
+        // 4) Ask Laravel to send the reset link for that user
+        $status = Password::broker()->sendResetLink([
+            'email' => $user->email,
+        ]);
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('status', __($status))
+            : back()->withErrors(['email' => __($status)]);
     }
+
 }

@@ -28,11 +28,11 @@ Route::middleware('guest')->group(function () {
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
         ->name('landlord.password.email');
 
-    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-        ->name('landlord.password.reset');
+    // Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+    //     ->name('landlord.password.reset');
 
-    Route::post('reset-password', [NewPasswordController::class, 'store'])
-        ->name('landlord.password.store');
+    // Route::post('reset-password', [NewPasswordController::class, 'store'])
+    //     ->name('landlord.password.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -48,12 +48,12 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send');
 
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
-        ->name('landlord.password.confirm');
+        ->name('password.confirm');
 
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store'])
-        ->name('landlord.confirm-password-store');
+        ->name('password.confirm-store');
 
-    Route::put('password', [PasswordController::class, 'update'])->name('landlord.password.update');
+    Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');

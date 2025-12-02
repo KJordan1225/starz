@@ -1,6 +1,11 @@
 @extends('layouts.home')
 
 @section('content')
+@php
+    use App\Services\TenantService;
+    $tenantService = new TenantService();
+    $tenantId = $tenantService->getTenantId();
+@endphp
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-12 col-sm-10 col-md-6 col-lg-4">
@@ -20,8 +25,8 @@
                             {{ session('status') }}
                         </div>
                     @endif
-
-                    <form method="POST" action="{{ route('landlord.password.email') }}">
+                    
+                    <form method="POST" action="{{ route('password.email', ['tenant' => $tenantId]) }}">
                         @csrf
 
                         {{-- Email --}}

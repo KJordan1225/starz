@@ -15,7 +15,7 @@
                 </div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route('password.store') }}">
+                    <form method="POST" action="{{ route('password.store', ['tenant' => request()->route('tenant')]) }}">
                         @csrf
 
                         {{-- Password Reset Token --}}
