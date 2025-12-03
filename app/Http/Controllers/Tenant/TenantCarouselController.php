@@ -6,6 +6,8 @@ use App\Models\Carousel;
 use App\Models\TenantVideo;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\MediaLibrary\Conversions\ImageGenerators\Video;
 
 class TenantCarouselController extends Controller
@@ -214,30 +216,30 @@ class TenantCarouselController extends Controller
     }
 
 
-    protected function createVideoThumbnail( TenantVideo $tenantVideo, \Spatie\MediaLibrary\MediaCollections\Models\Media $videoMedia): void
-    {
-        // Temp file path for the thumbnail
-        $thumbnailPath = storage_path('app/tmp/video-thumb-' . $videoMedia->id . '.jpg');
-
-        // Open the video via Laravel-FFMpeg (disk must match your media disk)
+    protected function createVideoThumbnail(
+    TenantVideo $tenantVideo,
+    Media $videoMedia
+    ): void {
         $disk = $videoMedia->disk ?? config('filesystems.default');
 
+        $relativeThumbPath = 'tmp/video-thumb-' . $videoMedia->id . '.jpg';
+
+        // 1) Generate thumbnail
         FFMpeg::fromDisk($disk)
             ->open($videoMedia->getPathRelativeToRoot())
-            // Pick frame at 1 second (you can adjust)
             ->getFrameFromSeconds(1)
             ->export()
-            ->toDisk('local') // we temporarily store thumbnail on 'local'
-            ->save('tmp/video-thumb-' . $videoMedia->id . '.jpg');
+            ->toDisk('local')
+            ->save($relativeThumbPath);
 
-        // 3) Attach thumbnail as an image media item
+        // ✅ 2) Attach thumbnail FROM DISK
         $tenantVideo
-            ->addMedia($thumbnailPath)
+            ->addMediaFromDisk($relativeThumbPath, 'local')
             ->usingFileName('video-thumb-' . $videoMedia->id . '.jpg')
             ->toMediaCollection('tenant_video_thumbnails');
 
-        // 4) Optional: clean up temp file
-        @unlink($thumbnailPath);
+        // ✅ 3) Cleanup
+        \Storage::disk('local')->delete($relativeThumbPath);
     }
 
     

@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\PrivateTenantImagesController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
+use App\Http\Controllers\MediaController;
 
 if (file_exists(__DIR__ . '/auth.php')) {
     require __DIR__ . '/auth.php';
@@ -46,6 +47,10 @@ Route::get('/microsite/create', [MicrositeController::class, 'show'])
     ->name('landlord.microsite.create');
 Route::post('/microsite/create', [MicrositeController::class, 'store'])
     ->name('landlord.microsite.store');
+
+
+Route::get('/video-player', [MediaController::class, 'show'])
+    ->name('video.player');
 
 
 // ----- Tenant (PATH-based: /{tenant}/...) -----

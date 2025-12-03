@@ -33,7 +33,7 @@ class TenantVideoController extends Controller
 
         $carousel = TenantVideo::where('tenant_id', $tenantId)
             ->with('media')
-            ->first();
+            ->first();   
 
         $carouselImages = $carousel
             ? $carousel->getMedia('tenant_videos') // or ->take(N)

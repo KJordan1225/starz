@@ -8,6 +8,11 @@
     {{-- Bootstrap 5 (CDN). Swap with @vite if you bundle locally. --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
+    {{-- jPlayer skin CSS --}}
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/jplayer/2.9.2/skin/blue.monday/jplayer.blue.monday.min.css"
+          integrity="sha512-nXzz3Tn3qJ3LqB0FZRksXJZYZb3MlCo0f5rJQk94zhmp9phZbH/TvKQTIc2uOAgUQlXk31rENtKiLiEBnIawxA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         /* Optional tweaks for mobile spacing */
@@ -38,7 +43,7 @@
             }
         }
     </style>
-
+    
     @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -274,7 +279,7 @@
 
     {{-- Bootstrap JS --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     @stack('scripts')
 </body>
 </html>
