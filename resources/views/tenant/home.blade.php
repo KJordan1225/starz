@@ -1,6 +1,11 @@
 @extends('layouts.landlord')
 
 @section('content')
+ @php
+    use App\Services\TenantService;
+    $tenantService = new TenantService();
+    $tenantId = $tenantService->getTenantId();
+@endphp
 <div class="container my-4">
     {{-- Tenant-aware carousel --}}
     @if ($carouselImages->isNotEmpty())
@@ -37,8 +42,8 @@
 
     <div class="text-center">
         <h3>Login (or Register) to view more of this model</h3>
-        <a href="{{ route('tenant.login', ['tenant'=> tenant('id')]) }}" class="btn btn-primary me-2">Login</a>
-        <a href="{{ route('tenant.register', ['tenant'=> tenant('id')]) }}" class="btn btn-secondary">Register</a>
+        <a href="{{ route('tenant.login', ['tenant'=> $tenantId]) }}" class="btn btn-primary me-2">Login</a>
+        <a href="{{ route('tenant.register', ['tenant'=> $tenantId]) }}" class="btn btn-secondary">Register</a>
     </div>
 
 

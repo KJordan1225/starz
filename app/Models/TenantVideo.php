@@ -20,7 +20,7 @@ class TenantVideo extends Model implements HasMedia
         // New media collection for videos
         $this->addMediaCollection('tenant_videos');
 
-        $this->addMediaCollection('tenant_video_thumbnails');
+        $this->addMediaCollection('tenant_video_thumbnails');        
 
     }
 }
