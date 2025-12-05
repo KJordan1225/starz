@@ -6,6 +6,8 @@
     $tenant = \App\Models\Tenant::find($tenantId);
 @endphp
 <div class="container my-4">
+    <a href="{{ route('tenant.user.home', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">User Dashboard</a>
+    &nbsp;&nbsp;
     <h2 class="mb-4">Creator Exclusive Images for {{ $tenant->id }}</h2>
 
     {{-- Display images in rows of 4 --}}

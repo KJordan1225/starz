@@ -88,7 +88,7 @@ class AuthenticatedSessionController extends Controller
         } else {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId], absolute: false));
+            return redirect()->intended(route('tenant.user.home', ['tenant' => $tenantId], absolute: false));
         } 
     
     }

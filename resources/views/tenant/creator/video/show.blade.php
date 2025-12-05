@@ -2,6 +2,7 @@
 
 @section('content')
 @php
+    $tenantId = request()->segment(1) ? request()->segment(1) : request()->route('tenant');
     $tenant = \App\Models\Tenant::find($tenantId);
 @endphp
 
@@ -13,7 +14,7 @@
     @if ($videos->isEmpty())
         <p>No videos have been uploaded yet.</p>
     @else
-        <div class="row g-4">
+        <div class="row g-4">            
             @foreach ($videos as $media)
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="card h-100">

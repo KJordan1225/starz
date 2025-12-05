@@ -11,10 +11,14 @@
     $videos = $videos->filter(fn (Media $m) =>
         str_starts_with($m->mime_type ?? '', 'video/')
     );
+
+    $tenantId = request()->segment(1) ? request()->segment(1) : request()->route('tenant');
+    $tenant = \App\Models\Tenant::find($tenantId);
 @endphp
 
 <div class="container py-5">
-
+    <a href="{{ route('tenant.user.home', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">User Dashboard</a>
+    &nbsp;&nbsp;
     <h1 class="mb-4">Exclusive Videos</h1>
 
     @if ($videos->isEmpty())
