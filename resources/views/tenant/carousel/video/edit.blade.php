@@ -6,7 +6,14 @@
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+    @php
+        use App\Services\TenantService;
+        $tenantService = new TenantService();
+        $tenantId = $tenantService->getTenantId();
+    @endphp
 
+    <a href="{{ route('tenant.admin.home', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Admin Dashboard</a>
+    &nbsp;&nbsp;
     <h2 class="mb-3">Manage Carousel Videos for {{ $tenantId ?? tenant('id') }}</h2>
 
     {{-- Upload form --}}

@@ -13,6 +13,10 @@ use App\Http\Controllers\PrivateTenantImagesController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
 use App\Http\Controllers\Tenant\TenantSubscriptionController;
 use App\Http\Controllers\Tenant\StripeTenantSubscriptionController;
+use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\StripeCheckoutController;
+use App\Http\Controllers\StripeWebhookController;
+
 
 if (file_exists(__DIR__ . '/auth.php')) {
     require __DIR__ . '/auth.php';
@@ -60,7 +64,31 @@ Route::prefix('{tenant}')
         // Tenant-auth routes
         if (file_exists(__DIR__ . '/tenant_auth.php')) {
             require __DIR__ . '/tenant_auth.php';
-        }        
+        }
+        
+        Route::middleware(['auth'])->group(function () {
+            Route::get('/checkout/order/{order}', [StripeCheckoutController::class, 'start'])
+                ->name('stripe.checkout.start');
+
+            Route::get('/checkout/order/{order}/success', [StripeCheckoutController::class, 'success'])
+                ->name('stripe.checkout.success');
+
+            Route::get('/checkout/order/{order}/cancel', [StripeCheckoutController::class, 'cancel'])
+                ->name('stripe.checkout.cancel');
+        });
+
+        Route::middleware(['auth'])
+            ->prefix('creator/stripe')
+            ->group(function () {
+                Route::get('/onboard', [StripeConnectController::class, 'start'])
+                    ->name('stripe.creator.onboarding.start');
+
+                Route::get('/onboard/refresh', [StripeConnectController::class, 'refresh'])
+                    ->name('stripe.creator.onboarding.refresh');
+
+                Route::get('/onboard/return', [StripeConnectController::class, 'return'])
+                    ->name('stripe.creator.onboarding.return');
+            });
 
         //User Dashboard Route
         Route::get('/user/dashboard', function () {
@@ -170,7 +198,6 @@ Route::prefix('{tenant}')
         Route::get('/creator/images/display', [PrivateTenantImagesController::class, 'creatorImagePageTwo'])
             ->name('tenant.creator.images.creatorImagePageTwo');
 
-
         Route::get('/creator/video', [TenantCarouselController::class, 'videoEdit'])
             ->name('tenant.creator.video.edit');
         Route::post('/creator/video', [TenantCarouselController::class, 'videoStore'])
@@ -180,7 +207,7 @@ Route::prefix('{tenant}')
 
         // Display Creator Video
         // Route::get('/creator/videos/show', [TenantVideoController::class, 'creatorVideoPage'])
-        //     ->name('tenant.creator.video.show');
+        //     ->name('tenant.tenant.video.show');
         Route::get('videos/stream/{media}', [TenantVideoController::class, 'stream'])
             ->name('tenant.videos.stream');
         Route::get('/videos/display', [TenantVideoController::class, 'creatorVideoPage'])
@@ -189,5 +216,7 @@ Route::prefix('{tenant}')
 
     });
 
+    Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+        ->name('stripe.webhook');
 
 require __DIR__.'/auth.php';
