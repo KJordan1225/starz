@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\StripeOrder;
+use App\Models\Order;
 use App\Models\Tenant;
 use App\Models\User;
 use Stripe\Exception\ApiErrorException;
@@ -27,7 +27,7 @@ class StripeSubscriptionStatusService
     public function isActiveForUserAndTenant(User $user, Tenant $tenant): bool
     {
         // Latest subscription order for this user + tenant
-        $order = StripeOrder::query()
+        $order = Order::query()
             ->where('order_type', 'subscription')
             ->where('tenant_id', $tenant->id)
             ->where('user_id', $user->id)

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\StripeOrder;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Stripe\Exception\SignatureVerificationException;
@@ -45,7 +45,7 @@ class StripeWebhookController extends Controller
     protected function handleCheckoutSessionCompleted($session): void
     {
         // $session is \Stripe\Checkout\Session
-        $order = StripeOrder::where('stripe_session_id', $session->id)->first();
+        $order = Order::where('stripe_session_id', $session->id)->first();
 
         if (! $order) {
             return;
@@ -79,7 +79,7 @@ class StripeWebhookController extends Controller
         // 2) Or create a new StripeOrder row per invoice if you want a full ledger
 
         // Example: mark "last_paid_at" on the original order (if you want)
-        $order = StripeOrder::where('stripe_subscription_id', $subscriptionId)->first();
+        $order = Order::where('stripe_subscription_id', $subscriptionId)->first();
 
         if ($order) {
             // Keep status as "succeeded" but update paid_at to latest invoice

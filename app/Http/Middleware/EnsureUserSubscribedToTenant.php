@@ -11,22 +11,27 @@ class EnsureUserSubscribedToTenant
 {
     public function handle(Request $request, Closure $next): Response
     {
-        /** @var \App\Models\User|null $user */
         $user = $request->user();
 
         if (! $user) {
             return redirect()->route('login');
         }
 
-        /** @var Tenant|null $tenant */
-        $tenant = $request->route('tenant');
+        // Get 'tenant' from the route
+        $routeTenant = $request->route('tenant');
 
-        if (! $tenant) {
-            abort(404, 'Tenant not found.');
+        // Normalize to a Tenant model
+        if ($routeTenant instanceof Tenant) {
+            $tenant = $routeTenant;
+        } else {
+            // If you're using ID as param:
+            $tenant = Tenant::where('id', $routeTenant)
+                // or if you sometimes use slug:
+                // ->orWhere('slug', $routeTenant)
+                ->firstOrFail();
         }
 
         if (! $user->hasActiveSubscriptionForTenant($tenant)) {
-            // Customize: redirect to upsell / plans page
             return redirect()
                 ->route('tenant.plans.index', ['tenant' => $tenant->id])
                 ->with('error', 'You must subscribe to access this content.');

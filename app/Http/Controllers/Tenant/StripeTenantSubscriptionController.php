@@ -251,7 +251,7 @@ class StripeTenantSubscriptionController extends Controller
             ->where('active', true)
             ->orderBy('amount')
             ->get();
-
+            
         return view('tenant.plans.index', [
             'tenant' => $tenant,
             'plans'  => $plans,

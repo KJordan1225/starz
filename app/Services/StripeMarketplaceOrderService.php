@@ -89,6 +89,7 @@ class StripeMarketplaceOrderService
             'status'                   => 'created',
             'metadata'                 => $metadata,
             'raw_payload'              => $session->toArray(),
+            'active'                   => true,
         ]);
 
         return [$order, $session];
@@ -103,67 +104,71 @@ class StripeMarketplaceOrderService
     */
 
     public function createSubscriptionCheckoutSession(
-        Tenant $tenant,
-        User $buyer,
-        string $priceId,
-        array $options = []
-    ): array {
-        $destination = $tenant->stripe_account_id;
+    Tenant $tenant,
+    User $buyer,
+    string $priceId,
+    array $options = []
+): array {
+    $destination = $tenant->stripe_account_id;
 
-        if (! $destination) {
-            throw new \RuntimeException('Tenant has no Stripe Connect account configured.');
-        }
-
-        $successUrl = $options['success_url'] ?? $this->buildSuccessUrl($tenant);
-        $cancelUrl  = $options['cancel_url']  ?? $this->buildCancelUrl($tenant);
-
-        $metadata = $this->buildMetadata($tenant, $buyer, $options['metadata'] ?? []);
-        $description = $options['description'] ?? "Subscription for tenant {$tenant->id}";
-
-        $applicationFeePercent = $this->getPlatformFeePercent();
-
-        $session = $this->stripe->checkout->sessions->create([
-            'mode'                 => 'subscription',
-            'payment_method_types' => ['card'],
-            'client_reference_id'  => (string) $buyer->id,
-            'customer_email'       => $buyer->email,
-
-            'line_items' => [[
-                'price'    => $priceId,
-                'quantity' => 1,
-            ]],
-
-            'success_url' => $successUrl,
-            'cancel_url'  => $cancelUrl,
-
-            'subscription_data' => [
-                'application_fee_percent' => $applicationFeePercent,
-                'transfer_data'           => [
-                    'destination' => $destination,
-                ],
-                'metadata'    => $metadata,
-                'description' => $description,
-            ],
-
-            'metadata' => $metadata,
-        ]);
-
-        // subscription may be null here; webhook will fill it in
-        $order = Order::create([
-            'order_type'            => 'subscription',
-            'tenant_id'             => $tenant->id,
-            'user_id'               => $buyer->id,
-            'stripe_session_id'     => $session->id,
-            'stripe_subscription_id'=> $session->subscription ?? null,
-            'amount'                => 0,       // optional; plan price is in Stripe
-            'currency'              => null,    // can fill in later if you want
-            'status'                => 'created',
-            'metadata'              => $metadata,
-            'raw_payload'           => $session->toArray(),
-        ]);
-
-        return [$order, $session];
+    if (! $destination) {
+        throw new \RuntimeException('Tenant has no Stripe Connect account configured.');
     }
+
+    $successUrl = $options['success_url'] ?? $this->buildSuccessUrl($tenant);
+    $cancelUrl  = $options['cancel_url']  ?? $this->buildCancelUrl($tenant);
+
+    $metadata     = $this->buildMetadata($tenant, $buyer, $options['metadata'] ?? []);
+    $description  = $options['description'] ?? "Subscription for tenant {$tenant->id}";
+    $feePercent   = $this->getPlatformFeePercent();
+    $orderCurrency = config('stripe_marketplace.currency', 'usd'); // 👈 use a real value
+
+    $session = $this->stripe->checkout->sessions->create([
+        'mode'                 => 'subscription',
+        'payment_method_types' => ['card'],
+        'client_reference_id'  => (string) $buyer->id,
+        'customer_email'       => $buyer->email,
+
+        'line_items' => [[
+            'price'    => $priceId,
+            'quantity' => 1,
+        ]],
+
+        'success_url' => $successUrl,
+        'cancel_url'  => $cancelUrl,
+
+        'subscription_data' => [
+            'application_fee_percent' => $feePercent,
+            'transfer_data'           => [
+                'destination' => $destination,
+            ],
+            'metadata'    => $metadata,
+            'description' => $description,
+        ],
+
+        'metadata' => $metadata,
+    ]);
+
+    // Optional: you can pull the actual currency from the session
+    // $orderCurrency = $session->currency ?? $orderCurrency;
+
+    $order = Order::create([
+        'order_type'             => 'subscription',
+        'tenant_id'              => $tenant->id,
+        'user_id'                => $buyer->id,
+        'stripe_session_id'      => $session->id,
+        'stripe_subscription_id' => $session->subscription ?? null,
+        'amount'                 => 0,                         // still fine for "meta" order
+        'currency'               => $orderCurrency,            // 👈 NOT null anymore
+        'status'                 => 'created',
+        'metadata'               => $metadata,
+        'raw_payload'            => $session->toArray(),
+        'active'                 => true,
+    ]);
+
+    return [$order, $session];
+}
+
 
     /*
     |--------------------------------------------------------------------------
