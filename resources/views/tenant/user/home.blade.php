@@ -26,10 +26,9 @@
                         <a href="{{ route('tenant.videos.display', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">
                             View Exclusive Videos
                         </a>
-                    
 
-                        <a href="{{ route('tenant.subscriptions.index', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">
-                            [PayPal] Manage Subscription
+                        <a href="{{ route('tenant.orders.create', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">
+                            [Stripe] Subscribe
                         </a>
 
                         <a href="{{ route('tenant.stripe.subscriptions.index', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">

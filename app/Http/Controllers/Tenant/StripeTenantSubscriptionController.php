@@ -11,6 +11,9 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Stripe\Exception\ApiErrorException;
+use App\Services\StripeMarketplaceOrderService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 
 class StripeTenantSubscriptionController extends Controller
@@ -239,6 +242,47 @@ class StripeTenantSubscriptionController extends Controller
             report($e);
             return back()->with('error', 'Unable to cancel Stripe subscription at period end.');
         }
+    }
+
+    public function getList(Request $request, Tenant $tenant): View
+    {
+        // Example: show active plans for this tenant
+        $plans = SubscriptionPlan::where('tenant_id', $tenant->id)
+            ->where('active', true)
+            ->orderBy('amount')
+            ->get();
+
+        return view('tenant.plans.index', [
+            'tenant' => $tenant,
+            'plans'  => $plans,
+        ]);
+    }
+
+    public function subscribe(
+        Request $request,
+        Tenant $tenant,
+        SubscriptionPlan $plan,
+        StripeMarketplaceOrderService $orders
+    ): RedirectResponse {
+        $user = $request->user();
+
+        if (! $plan->stripe_price_id) {
+            abort(400, 'Plan is not configured with a Stripe price ID.');
+        }
+
+        [$order, $session] = $orders->createSubscriptionCheckoutSession(
+            tenant: $tenant,
+            buyer:  $user,
+            priceId: $plan->stripe_price_id,
+            options: [
+                'description' => "Subscription to {$tenant->name} ({$plan->name})",
+                'metadata'    => [
+                    'plan_id' => $plan->id,
+                ],
+            ]
+        );
+
+        return redirect()->away($session->url);
     }
 
 }

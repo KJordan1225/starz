@@ -51,4 +51,43 @@ class StripeCreatorPlanController extends Controller
 
         return back()->with('success', 'Stripe subscription plan updated.');
     }
+
+    public function save(
+        Request $request,
+        StripeSubscriptionService $stripeSubscriptionService
+    ) {
+        $tenantId = tenant('id');
+        $tenant   = Tenant::findOrFail($tenantId);
+
+        $data = $request->validate([
+            'name'        => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'amount'      => ['required', 'numeric', 'min:1'], // dollars
+            'interval'    => ['required', 'in:month,year'],
+            'active'      => ['nullable'], // checkbox
+        ]);
+
+        // Convert dollars → cents
+        $amountInCents = (int) round($data['amount'] * 100);
+
+        $plan = SubscriptionPlan::firstOrNew([
+            'tenant_id' => $tenantId,
+        ]);
+
+        $plan->name        = $data['name'];
+        $plan->description = $data['description'] ?? null;
+        $plan->amount      = $amountInCents;
+        $plan->currency    = $plan->currency ?? 'usd';
+        $plan->interval    = $data['interval'];
+        $plan->active      = isset($data['active']) ? true : false;
+
+        $plan->save();
+
+        // Sync to Stripe (Product + Price; immutable price handling)
+        $stripeSubscriptionService->syncPlanToStripe($plan, $tenant);
+
+        return redirect()
+            ->route('edit.subscription-plan', ['tenant' => $tenantId])
+            ->with('success', 'Subscription plan saved and synced to Stripe.');
+    }
 }

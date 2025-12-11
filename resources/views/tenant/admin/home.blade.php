@@ -21,6 +21,8 @@
                     <a href="{{ route('tenant.creator.video.edit', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Upload Exclusive Videos</a>
                     <a href="{{ route('tenant.carousel.edit', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Upload Homepage Preview Images</a>
                     <a href="{{ route('stripe.creator.onboarding.start', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Onboard with Stripe</a>
+                    <a href="{{ route('edit.subscription-plan', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Configure Subscription Price</a>
+                </div>
                 </div>
             </div>
         </div>

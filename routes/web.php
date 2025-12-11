@@ -4,18 +4,20 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MicrositeController;
+use App\Http\Controllers\TenantOrderController;
 use App\Http\Controllers\VideoStreamController;
+use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\StripeCheckoutController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Tenant\TenantVideoController;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\PrivateTenantImagesController;
+use App\Http\Controllers\Tenant\OnboardStripeController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
-use App\Http\Controllers\Tenant\TenantSubscriptionController;
+use App\Http\Controllers\Tenant\StripeCreatorPlanController;;
 use App\Http\Controllers\Tenant\StripeTenantSubscriptionController;
-use App\Http\Controllers\StripeConnectController;
-use App\Http\Controllers\StripeCheckoutController;
-use App\Http\Controllers\StripeWebhookController;
 
 
 if (file_exists(__DIR__ . '/auth.php')) {
@@ -65,6 +67,31 @@ Route::prefix('{tenant}')
         if (file_exists(__DIR__ . '/tenant_auth.php')) {
             require __DIR__ . '/tenant_auth.php';
         }
+
+        Route::get('/creator/stripe-plan', [StripeCreatorPlanController::class, 'edit'])
+            ->name('edit.subscription-plan');
+
+        Route::post('/creator/stripe-plan', [StripeCreatorPlanController::class, 'save'])
+            ->name('save.subscription-plan');
+
+        // Subscriptions
+        Route::get('/plans', [StripeTenantSubscriptionController::class, 'getList'])
+            ->name('tenant.plans.index');
+
+        Route::post('/plans/{plan}/subscribe', [StripeTenantSubscriptionController::class, 'subscribe'])
+            ->name('tenant.plans.subscribe');
+
+        Route::get('/orders/create', [TenantOrderController::class, 'create'])
+            ->name('tenant.orders.create');
+
+        Route::post('/orders/checkout', [TenantOrderController::class, 'checkout'])
+            ->name('tenant.orders.checkout');
+
+        Route::get('/orders/success', [TenantOrderController::class, 'success'])
+            ->name('tenant.orders.success');
+
+        Route::get('/orders/cancel', [TenantOrderController::class, 'cancel'])
+            ->name('tenant.orders.cancel');
         
         Route::middleware(['auth'])->group(function () {
             Route::get('/checkout/order/{order}', [StripeCheckoutController::class, 'start'])
@@ -126,10 +153,10 @@ Route::prefix('{tenant}')
             ->name('tenant.stripe.onboard.complete');
 
         // Creator config for Stripe plan
-        Route::get('/creator/stripe-plan', [StripeCreatorPlanController::class, 'edit'])
-            ->name('tenant.stripe.plan.edit');
-        Route::post('/creator/stripe-plan', [StripeCreatorPlanController::class, 'update'])
-            ->name('tenant.stripe.plan.update');
+        // Route::get('/creator/stripe-plan', [StripeCreatorPlanController::class, 'edit'])
+        //     ->name('tenant.stripe.plan.edit');
+        // Route::post('/creator/stripe-plan', [StripeCreatorPlanController::class, 'update'])
+        //     ->name('tenant.stripe.plan.update');
         // Subscription provider choice (Stripe vs PayPal)
         Route::get('/subscriptions/choose', function () {
             $tenantId = tenant('id');
@@ -147,19 +174,19 @@ Route::prefix('{tenant}')
             ->name('tenant.stripe.subscriptions.cancel');
 
 
-        Route::get('/subscriptions', [TenantSubscriptionController::class, 'index'])
+        Route::get('/subscriptions', [StripeTenantSubscriptionController::class, 'getList'])
             ->name('tenant.subscriptions.index');
-        Route::post('/subscriptions/start', [TenantSubscriptionController::class, 'start'])
+        Route::post('/subscriptions/start', [StripeTenantSubscriptionController::class, 'start'])
             ->name('tenant.subscriptions.start');
-        Route::get('/subscriptions/approve', [TenantSubscriptionController::class, 'approve'])
+        Route::get('/subscriptions/approve', [StripeTenantSubscriptionController::class, 'approve'])
             ->name('tenant.subscriptions.approve');
-        Route::get('/subscriptions/cancel', [TenantSubscriptionController::class, 'cancelView'])
+        Route::get('/subscriptions/cancel', [StripeTenantSubscriptionController::class, 'cancelView'])
             ->name('tenant.subscriptions.cancel');
         // NEW: cancel at period end
-        Route::post('/subscriptions/{subscription}/cancel-period-end', [TenantSubscriptionController::class, 'cancelAtPeriodEnd'])
+        Route::post('/subscriptions/{subscription}/cancel-period-end', [StripeTenantSubscriptionController::class, 'cancelAtPeriodEnd'])
             ->name('tenant.subscriptions.cancel.period_end');
         // NEW: cancel immediately
-        Route::post('/subscriptions/{subscription}/cancel-now', [TenantSubscriptionController::class, 'cancelNow'])
+        Route::post('/subscriptions/{subscription}/cancel-now', [StripeTenantSubscriptionController::class, 'cancelNow'])
             ->name('tenant.subscriptions.cancel.now');
             
         Route::get('/tenant/admin/home', function () {
@@ -196,6 +223,7 @@ Route::prefix('{tenant}')
 
         // Display all tenant images in rows of 4
         Route::get('/creator/images/display', [PrivateTenantImagesController::class, 'creatorImagePageTwo'])
+            ->middleware('subscribed.to.tenant')
             ->name('tenant.creator.images.creatorImagePageTwo');
 
         Route::get('/creator/video', [TenantCarouselController::class, 'videoEdit'])
@@ -209,8 +237,10 @@ Route::prefix('{tenant}')
         // Route::get('/creator/videos/show', [TenantVideoController::class, 'creatorVideoPage'])
         //     ->name('tenant.tenant.video.show');
         Route::get('videos/stream/{media}', [TenantVideoController::class, 'stream'])
+            ->middleware('subscribed.to.tenant')
             ->name('tenant.videos.stream');
         Route::get('/videos/display', [TenantVideoController::class, 'creatorVideoPage'])
+            ->middleware('subscribed.to.tenant')
             ->name('tenant.videos.display');
 
 

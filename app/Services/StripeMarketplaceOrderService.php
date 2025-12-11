@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\StripeOrder;
+use App\Models\Order;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -17,92 +17,69 @@ class StripeMarketplaceOrderService
         $this->stripe = new StripeClient(config('services.stripe.secret'));
     }
 
-    /**
-     * Create a Checkout Session for a marketplace order.
-     *
-     * @param  Tenant      $tenant   The creator/seller's tenant
-     * @param  User        $buyer    The platform user buying
-     * @param  int|float   $amount   Amount in major units (e.g. 9.99 for $9.99)
-     * @param  string|null $currency
-     * @param  array       $options  Extra options/overrides (description, metadata, success/cancel URLs)
-     * @return array [StripeOrder $order, \Stripe\Checkout\Session $session]
-     */
-    public function createOrderCheckoutSession(
+    /*
+    |--------------------------------------------------------------------------
+    | ONE-TIME PAYMENTS (tips, PPV, etc.)
+    |--------------------------------------------------------------------------
+    */
+
+    public function createOneTimeOrderCheckoutSession(
         Tenant $tenant,
         User $buyer,
         int|float $amount,
         ?string $currency = null,
         array $options = []
     ): array {
-        $currency = $currency ?: config('stripe_marketplace.currency', 'usd');
-
-        // Convert to smallest currency unit (e.g. cents)
+        $currency      = $currency ?: config('stripe_marketplace.currency', 'usd');
         $amountInCents = (int) round($amount * 100);
+        $platformFee   = $this->calculatePlatformFeeAmount($amountInCents);
+        $destination   = $tenant->stripe_account_id;
 
-        // Calculate platform fee & creator share
-        $platformFeeAmount = $this->calculatePlatformFeeAmount($amountInCents);
-        $creatorStripeAccountId = $tenant->stripe_account_id;
-
-        if (! $creatorStripeAccountId) {
-            throw new \RuntimeException("Tenant has no Stripe Connect account configured.");
+        if (! $destination) {
+            throw new \RuntimeException('Tenant has no Stripe Connect account configured.');
         }
 
-        // Build success/cancel URLs (can be tenant-aware)
-        $successUrl = $options['success_url']
-            ?? $this->buildSuccessUrl($tenant);
-        $cancelUrl = $options['cancel_url']
-            ?? $this->buildCancelUrl($tenant);
+        $successUrl = $options['success_url'] ?? $this->buildSuccessUrl($tenant);
+        $cancelUrl  = $options['cancel_url']  ?? $this->buildCancelUrl($tenant);
 
-        // Optional metadata
-        $metadata = $options['metadata'] ?? [];
-        $metadata = array_merge($metadata, [
-            'tenant_id' => $tenant->id,
-            'buyer_id'  => $buyer->id,
-            'order_id'  => (string) Str::uuid(),
-        ]);
+        $metadata = $this->buildMetadata($tenant, $buyer, $options['metadata'] ?? []);
+        $description = $options['description'] ?? "Order for tenant {$tenant->id}";
 
-        $description = $options['description']
-            ?? "Order for tenant {$tenant->id}";
-
-        // 1) Create the Checkout Session (destination charge via payment_intent_data)
         $session = $this->stripe->checkout->sessions->create([
-            'mode'               => 'payment',
+            'mode'                 => 'payment',
             'payment_method_types' => ['card'],
             'client_reference_id'  => (string) $buyer->id,
-            'customer_email'       => $buyer->email, // or use a stored Stripe customer
+            'customer_email'       => $buyer->email,
 
-            'line_items' => [
-                [
-                    'price_data' => [
-                        'currency'     => $currency,
-                        'unit_amount'  => $amountInCents,
-                        'product_data' => [
-                            'name'        => $options['product_name'] ?? 'Marketplace Order',
-                            'description' => $description,
-                        ],
+            'line_items' => [[
+                'price_data' => [
+                    'currency'     => $currency,
+                    'unit_amount'  => $amountInCents,
+                    'product_data' => [
+                        'name'        => $options['product_name'] ?? 'Marketplace Order',
+                        'description' => $description,
                     ],
-                    'quantity' => 1,
                 ],
-            ],
+                'quantity' => 1,
+            ]],
 
             'success_url' => $successUrl,
             'cancel_url'  => $cancelUrl,
 
-            // This is where the marketplace magic happens:
             'payment_intent_data' => [
-                'application_fee_amount' => $platformFeeAmount,
+                'application_fee_amount' => $platformFee,
                 'transfer_data'          => [
-                    'destination' => $creatorStripeAccountId,
+                    'destination' => $destination,
                 ],
-                'metadata' => $metadata,
+                'metadata'    => $metadata,
                 'description' => $description,
             ],
 
             'metadata' => $metadata,
         ]);
 
-        // 2) Persist order locally (stripe_orders table)
-        $order = StripeOrder::create([
+        $order = Order::create([
+            'order_type'               => 'one_time',
             'tenant_id'                => $tenant->id,
             'user_id'                  => $buyer->id,
             'stripe_session_id'        => $session->id,
@@ -117,33 +94,114 @@ class StripeMarketplaceOrderService
         return [$order, $session];
     }
 
-    /**
-     * Calculate the platform fee amount in the smallest currency unit (e.g. cents).
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | RECURRING SUBSCRIPTIONS (OnlyFans-style)
+    |--------------------------------------------------------------------------
+    |
+    | $priceId = Stripe recurring Price ID (e.g. "price_123")
+    */
+
+    public function createSubscriptionCheckoutSession(
+        Tenant $tenant,
+        User $buyer,
+        string $priceId,
+        array $options = []
+    ): array {
+        $destination = $tenant->stripe_account_id;
+
+        if (! $destination) {
+            throw new \RuntimeException('Tenant has no Stripe Connect account configured.');
+        }
+
+        $successUrl = $options['success_url'] ?? $this->buildSuccessUrl($tenant);
+        $cancelUrl  = $options['cancel_url']  ?? $this->buildCancelUrl($tenant);
+
+        $metadata = $this->buildMetadata($tenant, $buyer, $options['metadata'] ?? []);
+        $description = $options['description'] ?? "Subscription for tenant {$tenant->id}";
+
+        $applicationFeePercent = $this->getPlatformFeePercent();
+
+        $session = $this->stripe->checkout->sessions->create([
+            'mode'                 => 'subscription',
+            'payment_method_types' => ['card'],
+            'client_reference_id'  => (string) $buyer->id,
+            'customer_email'       => $buyer->email,
+
+            'line_items' => [[
+                'price'    => $priceId,
+                'quantity' => 1,
+            ]],
+
+            'success_url' => $successUrl,
+            'cancel_url'  => $cancelUrl,
+
+            'subscription_data' => [
+                'application_fee_percent' => $applicationFeePercent,
+                'transfer_data'           => [
+                    'destination' => $destination,
+                ],
+                'metadata'    => $metadata,
+                'description' => $description,
+            ],
+
+            'metadata' => $metadata,
+        ]);
+
+        // subscription may be null here; webhook will fill it in
+        $order = Order::create([
+            'order_type'            => 'subscription',
+            'tenant_id'             => $tenant->id,
+            'user_id'               => $buyer->id,
+            'stripe_session_id'     => $session->id,
+            'stripe_subscription_id'=> $session->subscription ?? null,
+            'amount'                => 0,       // optional; plan price is in Stripe
+            'currency'              => null,    // can fill in later if you want
+            'status'                => 'created',
+            'metadata'              => $metadata,
+            'raw_payload'           => $session->toArray(),
+        ]);
+
+        return [$order, $session];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shared helpers
+    |--------------------------------------------------------------------------
+    */
+
     public function calculatePlatformFeeAmount(int $amountInCents): int
     {
-        $percent = (float) config('stripe_marketplace.platform_fee_percent', 20);
+        $percent = $this->getPlatformFeePercent();
 
         return (int) round($amountInCents * ($percent / 100));
     }
 
-    /**
-     * Build a tenant-aware success URL.
-     */
+    public function getPlatformFeePercent(): float
+    {
+        return (float) config('stripe_marketplace.platform_fee_percent', 20);
+    }
+
+    protected function buildMetadata(Tenant $tenant, User $buyer, array $extra = []): array
+    {
+        return array_merge($extra, [
+            'tenant_id'  => $tenant->id,
+            'buyer_id'   => $buyer->id,
+            'order_uuid' => (string) Str::uuid(),
+        ]);
+    }
+
     protected function buildSuccessUrl(Tenant $tenant): string
     {
-        // Example if you have a named route:
         if (function_exists('route')) {
-            return route('tenant.orders.success', ['tenant' => $tenant->id, 'session_id' => '{CHECKOUT_SESSION_ID}'], true);
+            return route('tenant.orders.success', ['tenant' => $tenant->id], true)
+                . '?session_id={CHECKOUT_SESSION_ID}';
         }
 
-        // Fallback
         return rtrim(config('stripe_marketplace.success_url'), '/');
     }
 
-    /**
-     * Build a tenant-aware cancel URL.
-     */
     protected function buildCancelUrl(Tenant $tenant): string
     {
         if (function_exists('route')) {

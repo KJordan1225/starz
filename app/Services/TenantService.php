@@ -18,8 +18,8 @@ class TenantService {
             $tenant_id = $tenancy->tenant?->id;
         } else {
             // Prefer route param `{tenant}`, fall back to first segment
-            $segment = request()->route('tenant') ?? request()->segment(1);
-
+            $segment = request()->segment(1);
+            
             if ($segment) {
                 $tenant = Tenant::query()
                     ->where('id', $segment)

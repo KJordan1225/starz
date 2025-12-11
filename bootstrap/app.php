@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\EnsureUserSubscribedToTenant;
 
 // Tenancy middleware
 use App\Http\Middleware\AttachTenantContext;
@@ -25,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // 'tenant'          => TenantMiddleware::class,
             'tenant.defaults' => TenantDefaults::class,
             'tenant' => InitializeTenantFromPath::class,
+            'subscribed.to.tenant' => EnsureUserSubscribedToTenant::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Stancl\Tenancy\Database\Concerns\BelongsToTenant; // << key trait
 use App\Notifications\TenantResetPasswordNotification;
+use App\Models\Order;
+use App\Models\Tenant;
+use App\Services\StripeSubscriptionStatusService;
+
 
 class User extends Authenticatable
 {
@@ -143,6 +147,23 @@ class User extends Authenticatable
         $this->notify(
             new TenantResetPasswordNotification($token, $tenant)
         );
+    }
+
+
+    public function Orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Convenience helper to check subscription for a tenant.
+     */
+    public function hasActiveSubscriptionForTenant(Tenant $tenant): bool
+    {
+        /** @var StripeSubscriptionStatusService $service */
+        $service = app(StripeSubscriptionStatusService::class);
+
+        return $service->isActiveForUserAndTenant($this, $tenant);
     }
 
 }

@@ -30,7 +30,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('stripe_account_id')->nullable()->index();
                 $table->foreign('stripe_account_id')
                     ->references('id')
-                    ->on('stripe_accounts')
+                    ->on('accounts')
                     ->cascadeOnDelete();
 
                 // Stripe identifiers
