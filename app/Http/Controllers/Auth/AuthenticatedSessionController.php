@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use App\Models\User;
+use App\Models\Tenant;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -79,7 +80,10 @@ class AuthenticatedSessionController extends Controller
         $user = auth()->user();
         
         $isAdmin = $user->hasRole('admin', $tenantId);
+        $tenant = Tenant::find($tenantId)->first();
 
+        $currentTenantActiveSubscription = $user->hasActiveSubscriptionForTenant($tenant);
+        
         if ($isAdmin)
         {
             $request->session()->regenerate();
@@ -88,7 +92,13 @@ class AuthenticatedSessionController extends Controller
         } else {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('tenant.user.home', ['tenant' => $tenantId], absolute: false));
+            // if auth user has subscription to curren tenant account: goto user dashboard
+            if ($currentTenantActiveSubscription) {
+                return redirect()->intended(route('tenant.user.home', ['tenant' => $tenantId], absolute: false));
+            } else {            
+            // else allow user to subscribe to current tenant account            
+                return redirect()->intended(route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId], absolute: false));
+            }
         } 
     
     }

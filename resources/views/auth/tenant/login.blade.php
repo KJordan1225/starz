@@ -22,13 +22,13 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('login') }}">
+                    <form method="POST" action="{{ route('tenant.login.store', ['tenant' => $tenantId]) }}">
                         @csrf
 
                         {{-- Email --}}
                         <div class="mb-3">
                             <label for="email" class="form-label">
-                                Email Address
+                                Email Address [Auth]
                             </label>
                             <input
                                 id="email"

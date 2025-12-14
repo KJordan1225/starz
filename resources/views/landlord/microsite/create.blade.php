@@ -27,10 +27,13 @@
 
         {{-- Tenant ID / Slug (primary key used by stancl/tenancy) --}}
         <div class="col-12 col-md-6">
-            <label for="id" class="form-label">Tenant ID / Slug</label>
+            <label for="id" class="form-label">MicroSite ID / Slug</label>
             <input type="text" id="id" name="id"
                    class="form-control @error('id') is-invalid @enderror"
-                   value="{{ old('id') }}" required>
+                   value="{{ old('id') }}" required
+                   data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Type microsite ID/slug [all lowercase-dashes instead of spaces]">
             <div class="form-text">e.g. <code>alpha</code>, <code>bravo-studios</code>. Used in the URL path.</div>
             @error('id') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
@@ -40,7 +43,10 @@
             <label for="display_name" class="form-label">Display Name</label>
             <input type="text" id="display_name" name="display_name"
                    class="form-control @error('display_name') is-invalid @enderror"
-                   value="{{ old('display_name') }}" required>
+                   value="{{ old('display_name') }}" required
+                   data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Human readable microsite ID">
             @error('display_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
 
@@ -61,7 +67,10 @@
             <label for="email" class="form-label">Email (optional)</label>
             <input type="email" id="email" name="email"
                 class="form-control @error('email') is-invalid @enderror"
-                value="{{ old('email') }}" placeholder="example@domain.com">
+                value="{{ old('email') }}" placeholder="example@domain.com"
+               data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Admin email address"
             @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
 
@@ -70,7 +79,10 @@
             <label for="password" class="form-label">Password</label>
             <input type="password" id="password" name="password"
                 class="form-control @error('password') is-invalid @enderror"
-                value="{{ old('password') }}" placeholder="Enter your password" required>
+                value="{{ old('password') }}" placeholder="Enter your password" required
+                data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Enter password here>"
             @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
 
@@ -90,4 +102,12 @@
         </div>
     </form>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 @endsection

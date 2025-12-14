@@ -1,0 +1,118 @@
+@extends('layouts.landlord')
+
+@section('content')
+
+@php
+    use App\Services\TenantService;
+    $tenantService = new TenantService();
+    $tenantId = $tenantService->getTenantId();
+@endphp
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="mb-0">Images for {{ $carousel->title }}</h3>
+    </div>
+
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    <a href="{{ route('tenant.admin.home', ['tenant' => $tenantId]) }}"
+       class="btn btn-outline-primary mb-3 w-100">
+        Admin Dashboard
+    </a>
+
+    @if($images->isEmpty())
+        <div class="alert alert-info">
+            No images have been uploaded yet.
+        </div>
+    @else
+        <div class="row g-3">
+            @foreach($images as $media)
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card h-100 shadow-sm">
+
+                        {{-- CLICKABLE IMAGE --}}
+                        <img
+                            src="{{ $media->getUrl() }}"
+                            class="card-img-top img-thumbnail cursor-pointer"
+                            alt="{{ $media->file_name }}"
+                            style="object-fit: cover; height: 180px; cursor: pointer;"
+                            data-bs-toggle="modal"
+                            data-bs-target="#imagePreviewModal"
+                            data-image-url="{{ $media->getUrl() }}"
+                            data-image-name="{{ $media->file_name }}"
+                        >
+
+                        <div class="card-body p-2">
+                            <div class="small text-muted mb-2">
+                                {{ $media->file_name }}
+                            </div>
+
+                            <div class="d-grid">
+                                <form method="POST"
+                                      action="{{ route('tenant.exclusive.images.destroy', ['tenant' => $tenantId, 'media' => $media->id]) }}"
+                                      onsubmit="return confirm('Delete this image? This cannot be undone.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+</div>
+
+{{-- FULL IMAGE MODAL --}}
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagePreviewTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center p-0">
+                <img
+                    id="imagePreview"
+                    src=""
+                    alt=""
+                    class="img-fluid w-100"
+                    style="max-height: 85vh; object-fit: contain;"
+                >
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('imagePreviewModal');
+    const modalImage = document.getElementById('imagePreview');
+    const modalTitle = document.getElementById('imagePreviewTitle');
+
+    modal.addEventListener('show.bs.modal', function (event) {
+        const trigger = event.relatedTarget;
+
+        modalImage.src = trigger.getAttribute('data-image-url');
+        modalTitle.textContent = trigger.getAttribute('data-image-name');
+    });
+
+    modal.addEventListener('hidden.bs.modal', function () {
+        modalImage.src = '';
+        modalTitle.textContent = '';
+    });
+});
+</script>
+@endpush

@@ -71,6 +71,12 @@
                                                 Register
                                             </a>
                                         @endif
+                                        
+                                        <a href="{{ route('landlord.microsite.create') }}"
+	                                        class="btn btn-outline-primary w-100"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="Click to establish micro-site!">Establish Your Micro-site</a>         
                                     @endauth
                                 @endif
                             </div>
@@ -91,5 +97,14 @@
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
             crossorigin="anonymous"
         ></script>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+        </script>
     </body>
 </html>

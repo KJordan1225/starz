@@ -79,7 +79,7 @@ class StripeMarketplaceOrderService
         ]);
 
         $order = Order::create([
-            'order_type'               => 'one_time',
+            'order_type'               => 'subscription',
             'tenant_id'                => $tenant->id,
             'user_id'                  => $buyer->id,
             'stripe_session_id'        => $session->id,
