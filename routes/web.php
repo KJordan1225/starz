@@ -9,20 +9,22 @@ use App\Http\Controllers\VideoStreamController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\StripeCheckoutController;
+use App\Http\Controllers\TenantPlanAdminController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Tenant\TenantVideoController;
+use App\Http\Controllers\TenantSubscriptionController;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\PrivateTenantImagesController;
 use App\Http\Controllers\TenantCarouselImageController;
+use App\Http\Controllers\TenantStripeConnectController;
 use App\Http\Controllers\Tenant\OnboardStripeController;
 use App\Http\Controllers\TenantExclusiveImageController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
+use App\Http\Controllers\TenantSubscribeReturnController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Tenant\StripeCreatorPlanController;;
 use App\Http\Controllers\Tenant\StripeTenantSubscriptionController;
-use App\Http\Controllers\TenantSubscriptionController;
-use App\Http\Controllers\TenantSubscribeReturnController;
 
 
 if (file_exists(__DIR__ . '/auth.php')) {
@@ -72,6 +74,49 @@ Route::prefix('{tenant}')
         if (file_exists(__DIR__ . '/tenant_auth.php')) {
             require __DIR__ . '/tenant_auth.php';
         }
+
+        // ****************************************************************
+        // *  Tenant Stripe Onboarding routing
+        // *****************************************************************
+
+        // Admin: Connect onboarding entry
+        Route::get('/admin/stripe/connect', [TenantStripeConnectController::class, 'index'])
+            ->name('tenant.stripe.connect.index');
+
+        // Admin: Start (or resume) onboarding -> redirects to Stripe
+        Route::post('/admin/stripe/connect/start', [TenantStripeConnectController::class, 'start'])
+            ->name('tenant.stripe.connect.start');
+
+        // Admin: Stripe returns here after onboarding (return_url)
+        Route::get('/admin/stripe/connect/return', [TenantStripeConnectController::class, 'return'])
+            ->name('tenant.stripe.connect.return');
+
+        // Admin: Stripe refreshes here if user abandons (refresh_url)
+        Route::get('/admin/stripe/connect/refresh', [TenantStripeConnectController::class, 'refresh'])
+            ->name('tenant.stripe.connect.refresh');
+
+        // *******************************************************************************
+
+        Route::prefix('admin')
+            ->middleware(['auth']) // and your tenant-admin middleware if you have it
+            ->group(function () {
+
+                Route::get('/plans', [TenantPlanAdminController::class, 'index'])
+                    ->name('tenant.admin.plans.index');
+
+                Route::get('/plans/create', [TenantPlanAdminController::class, 'create'])
+                    ->name('tenant.admin.plans.create');
+
+                Route::post('/plans', [TenantPlanAdminController::class, 'store'])
+                    ->name('tenant.admin.plans.store');
+
+                Route::get('/plans/{plan}/edit', [TenantPlanAdminController::class, 'edit'])
+                    ->name('tenant.admin.plans.edit');
+
+                Route::put('/plans/{plan}', [TenantPlanAdminController::class, 'update'])
+                    ->name('tenant.admin.plans.update');
+            });
+
 
         // ****************************************************************
         // *  New Subscription Marketplace routing

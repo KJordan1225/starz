@@ -44,6 +44,7 @@ class Order extends Model
         'canceled_at'          => 'datetime',
     ];
 
+    
     public function tenant()
     {
         return $this->belongsTo(Tenant::class);

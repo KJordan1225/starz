@@ -43,6 +43,8 @@ class TenantSubscriptionController extends Controller
             return redirect()->route('login');
         }
 
+        // Safety: do not allow subscriptions unless tenant onboarded
+        abort_unless($tenant->stripe_account_id, 400, 'Creator is not connected to Stripe yet.');
         // Safety: ensure plan belongs to this tenant
         abort_unless((string) $plan->tenant_id === (string) $tenant->id, 404);
 
