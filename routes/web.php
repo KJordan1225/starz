@@ -21,6 +21,8 @@ use App\Http\Controllers\Tenant\TenantCarouselController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Tenant\StripeCreatorPlanController;;
 use App\Http\Controllers\Tenant\StripeTenantSubscriptionController;
+use App\Http\Controllers\TenantSubscriptionController;
+use App\Http\Controllers\TenantSubscribeReturnController;
 
 
 if (file_exists(__DIR__ . '/auth.php')) {
@@ -70,6 +72,32 @@ Route::prefix('{tenant}')
         if (file_exists(__DIR__ . '/tenant_auth.php')) {
             require __DIR__ . '/tenant_auth.php';
         }
+
+        // ****************************************************************
+        // *  New Subscription Marketplace routing
+        // *****************************************************************
+
+        // Show available subscription plans for this tenant
+        Route::get('/plans', [TenantSubscriptionController::class, 'index'])
+            ->name('tenant.plans.index');
+
+        // Start checkout for a plan subscription
+        Route::post('/plans/{plan}/subscribe', [TenantSubscriptionController::class, 'start'])
+            ->middleware('auth') // recommended: user must be logged in to subscribe
+            ->name('tenant.plans.subscribe');
+
+        // Return URLs from Stripe Checkout
+        Route::get('/subscribe/success', [TenantSubscribeReturnController::class, 'success'])
+            ->name('tenant.subscribe.success');
+
+        Route::get('/subscribe/cancel', [TenantSubscribeReturnController::class, 'cancel'])
+            ->name('tenant.subscribe.cancel');
+
+
+
+
+
+            
 
         // Manage tenant exclusive images
         Route::get('/tenant-images', [TenantExclusiveImageController::class, 'index'])

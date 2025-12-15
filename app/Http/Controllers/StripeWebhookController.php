@@ -5,86 +5,106 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
+use Stripe\Exception\SignatureVerificationException;
 
 class StripeWebhookController extends Controller
 {
     public function handle(Request $request): Response
     {
-        $payload    = $request->getContent();
-        $sigHeader  = $request->header('Stripe-Signature');
-        $secret     = config('services.stripe.webhook_secret');
+        $payload   = $request->getContent();
+        $sigHeader = $request->header('Stripe-Signature');
+        $secret    = config('services.stripe.webhook_secret');
 
         try {
-            $event = Webhook::constructEvent(
-                $payload,
-                $sigHeader,
-                $secret
-            );
+            $event = Webhook::constructEvent($payload, $sigHeader, $secret);
         } catch (SignatureVerificationException $e) {
             return response('Invalid signature', 400);
         } catch (\UnexpectedValueException $e) {
             return response('Invalid payload', 400);
         }
 
-        switch ($event->type) {
-            case 'checkout.session.completed':
-                $this->handleCheckoutSessionCompleted($event->data->object);
-                break;
-
-            case 'invoice.payment_succeeded':
-                // Optional: track recurring invoices as additional order records or logs
-                $this->handleInvoicePaymentSucceeded($event->data->object);
-                break;
-        }
+        match ($event->type) {
+            'checkout.session.completed'        => $this->handleCheckoutSessionCompleted($event->data->object),
+            'customer.subscription.created',
+            'customer.subscription.updated'     => $this->syncSubscription($event->data->object),
+            'customer.subscription.deleted'     => $this->handleSubscriptionDeleted($event->data->object),
+            default                              => null,
+        };
 
         return response('OK', 200);
     }
 
+
     protected function handleCheckoutSessionCompleted($session): void
     {
-        // $session is \Stripe\Checkout\Session
+        // Only subscription checkouts
+        if ($session->mode !== 'subscription') {
+            return;
+        }
+
         $order = Order::where('stripe_session_id', $session->id)->first();
 
         if (! $order) {
             return;
         }
 
-        if ($order->order_type === 'subscription') {
-            // subscription ID should now be present
-            $order->stripe_subscription_id = $session->subscription ?? $order->stripe_subscription_id;
-        } else {
-            // one-time payment
-            $order->stripe_payment_intent_id = $session->payment_intent ?? $order->stripe_payment_intent_id;
-        }
-
-        $order->status  = 'succeeded';
-        $order->paid_at = now();
-        $order->save();
+        $order->update([
+            'stripe_customer_id'      => $session->customer,
+            'stripe_subscription_id'  => $session->subscription,
+            'status'                  => 'active', // provisional until subscription event
+            'raw_payload'             => $session->toArray(),
+        ]);
     }
 
-    protected function handleInvoicePaymentSucceeded($invoice): void
-    {
-        // $invoice is \Stripe\Invoice
-        // subscription ID is here for recurring charges
-        $subscriptionId = $invoice->subscription ?? null;
 
-        if (! $subscriptionId) {
+    protected function syncSubscription($subscription): void
+    {
+        $order = StripeOrder::where('stripe_subscription_id', $subscription->id)->first();
+
+        if (! $order) {
             return;
         }
 
-        // You can either:
-        // 1) Just log it / update a "last_paid_at" on a Subscription model
-        // 2) Or create a new StripeOrder row per invoice if you want a full ledger
+        $priceId = $subscription->items->data[0]->price->id ?? null;
 
-        // Example: mark "last_paid_at" on the original order (if you want)
-        $order = Order::where('stripe_subscription_id', $subscriptionId)->first();
+        $order->update([
+            'stripe_customer_id'      => $subscription->customer,
+            'stripe_price_id'         => $priceId,
 
-        if ($order) {
-            // Keep status as "succeeded" but update paid_at to latest invoice
-            $order->paid_at = now();
-            $order->save();
-        }
+            'status'                  => $subscription->status,
+            'cancel_at_period_end'    => $subscription->cancel_at_period_end,
+
+            'current_period_start'    => $subscription->current_period_start
+                ? now()->setTimestamp($subscription->current_period_start)
+                : null,
+
+            'current_period_end'      => $subscription->current_period_end
+                ? now()->setTimestamp($subscription->current_period_end)
+                : null,
+
+            'canceled_at'             => $subscription->canceled_at
+                ? now()->setTimestamp($subscription->canceled_at)
+                : null,
+
+            'raw_payload'             => $subscription->toArray(),
+        ]);
     }
+
+
+    protected function handleSubscriptionDeleted($subscription): void
+    {
+        $order = StripeOrder::where('stripe_subscription_id', $subscription->id)->first();
+
+        if (! $order) {
+            return;
+        }
+
+        $order->update([
+            'status'      => 'canceled',
+            'canceled_at' => now(),
+            'raw_payload' => $subscription->toArray(),
+        ]);
+    }
+
 }

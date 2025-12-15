@@ -10,24 +10,39 @@ return new class extends Migration
     {
         if (! Schema::hasTable('plans')) {
             Schema::create('plans', function (Blueprint $table) {
-                $table->id();
+                $table->bigIncrements('id');
 
-                // Optional: per-tenant plans
-                $table->string('tenant_id')->nullable()->index();
+                // Tenant scope
+                $table->string('tenant_id', 36)->index();
                 $table->foreign('tenant_id')
-                    ->references('id')->on('tenants')
+                    ->references('id')
+                    ->on('tenants')
                     ->cascadeOnDelete();
 
+                // Plan display info
                 $table->string('name');
-                $table->unsignedBigInteger('amount'); // cents
+                $table->text('description')->nullable();
+
+                // Stripe identifiers
+                $table->string('stripe_price_id', 191)->unique(); // price_...
+                $table->string('stripe_product_id', 191)->nullable(); // prod_...
+
+                // Optional pricing metadata (for UI only)
+                $table->unsignedBigInteger('amount')->nullable(); // cents
                 $table->string('currency', 3)->default('usd');
-                $table->string('interval', 32)->default('month'); // month, year, etc.
+                $table->string('interval', 16)->default('month'); // month|year
 
-                $table->string('stripe_price_id', 191)->nullable()->index();
-
+                // Flags
                 $table->boolean('active')->default(true);
+                $table->boolean('featured')->default(false);
+
+                // Extra data
+                $table->json('metadata')->nullable();
 
                 $table->timestamps();
+                $table->softDeletes();
+
+                $table->index(['tenant_id', 'active']);
             });
         }
     }

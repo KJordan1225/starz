@@ -9,38 +9,40 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Order extends Model
 {
     use SoftDeletes;
-    use BelongsToTenant; // your tenant-aware trait (global scope + auto-fill tenant_id)
+    use BelongsToTenant;
 
     protected $table = 'orders';
 
     protected $fillable = [
+        'order_type',
         'tenant_id',
         'user_id',
-        'stripe_order_id',
-        'stripe_payment_intent_id',
-        'stripe_charge_id',
+
         'stripe_session_id',
-        'amount',
-        'currency',
+        'stripe_subscription_id',
+        'stripe_customer_id',
+        'stripe_price_id',
+
         'status',
-        'orderable_type',
-        'orderable_id',
+        'cancel_at_period_end',
+        'current_period_start',
+        'current_period_end',
+        'canceled_at',
+
         'metadata',
         'raw_payload',
-        'paid_at',
     ];
 
     protected $casts = [
-        'metadata'    => 'array',
-        'raw_payload' => 'array',
-        'paid_at'     => 'datetime',
-    ];
+        'metadata'             => 'array',
+        'raw_payload'          => 'array',
 
-    /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
+        'cancel_at_period_end' => 'boolean',
+
+        'current_period_start' => 'datetime',
+        'current_period_end'   => 'datetime',
+        'canceled_at'          => 'datetime',
+    ];
 
     public function tenant()
     {
@@ -52,32 +54,13 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Polymorphic link to “what” the order is for: subscription, tip, PPV, etc.
-    public function orderable()
+    public function isActive(): bool
     {
-        return $this->morphTo();
+        return in_array($this->status, ['active', 'trialing'], true);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Scopes / Helpers
-    |--------------------------------------------------------------------------
-    */
-
-    public function scopeForTenant($query, string $tenantId)
+    public function isCanceled(): bool
     {
-        return $query->where('tenant_id', $tenantId);
-    }
-
-    public function isPaid(): bool
-    {
-        return $this->status === 'succeeded';
-    }
-
-    public function markAsPaid(?string $statusFromStripe = 'succeeded'): void
-    {
-        $this->status  = $statusFromStripe ?: 'succeeded';
-        $this->paid_at = now();
-        $this->save();
+        return $this->status === 'canceled';
     }
 }
