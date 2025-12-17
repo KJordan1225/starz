@@ -66,4 +66,55 @@ class TenantSubscriptionController extends Controller
 
         return redirect()->away($session->url);
     }
+
+
+    public function subscribe(Request $request, Plan $plan)
+    {
+        $tenant = Tenant::findByDomain($request->tenant); // Retrieve tenant from subdomain or path
+
+        // Get user if logged in, or null for anonymous users
+        $user = auth()->user();
+
+        // Create Stripe Checkout session for subscription
+        $stripeService = new StripeMarketplaceOrderService();
+        $checkoutUrl = $stripeService->createCheckoutSession($plan, $tenant, $user);
+
+        return redirect()->to($checkoutUrl);
+    }
+
+
+    /**
+     * Show the form for editing the subscription price of a plan.
+     */
+    public function editPrice(Request $request, Plan $plan)
+    {
+        $tenant = Tenant::findByDomain($request->tenant); // Retrieve tenant from subdomain or path
+
+        return view('tenant.plans.edit_price', compact('plan', 'tenant'));
+    }
+
+
+    /**
+     * Update the subscription price for a given plan.
+     */
+    public function updatePrice(Request $request, Plan $plan)
+    {
+        $tenant = Tenant::findByDomain($request->tenant); // Retrieve tenant from subdomain or path
+
+        // Validate price input
+        $validated = $request->validate([
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        // Update the price for the plan
+        $plan->update([
+            'price' => $validated['price'],
+        ]);
+
+        return redirect()->route('tenant.plans.index', ['tenant' => $tenant->slug])
+                         ->with('success', 'Subscription price updated successfully.');
+    }
+
+    
+    
 }

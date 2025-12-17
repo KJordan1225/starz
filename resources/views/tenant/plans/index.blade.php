@@ -11,6 +11,8 @@
 
 <div class="container py-5">
 
+    <a href="{{ route('tenant.plans.edit_price', ['tenant' => $tenant->ID, 'plan' => $plan->id]) }}" class="btn btn-warning">Edit Price</a>
+
     <div class="row mb-4">
         <div class="col text-center">
             <h2 class="fw-bold">

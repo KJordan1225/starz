@@ -75,6 +75,27 @@ Route::prefix('{tenant}')
             require __DIR__ . '/tenant_auth.php';
         }
 
+       
+
+        // ****************************************************************
+        // *  Create/UpdaTE sUBSCRIPTION pLAN PRICING ROUTES
+        // *****************************************************************
+
+        // Route::get('/plans', [TenantSubscriptionController::class, 'index'])
+        //     ->name('tenant.plans.index');
+        Route::get('/plans/{plan}/edit-price', [TenantSubscriptionController::class, 'editPrice'])
+            ->name('tenant.plans.edit_price');
+        Route::put('/plans/{plan}/update-price', [TenantSubscriptionController::class, 'updatePrice'])
+            ->name('tenant.plans.update_price');
+
+        // ****************************************************************
+        // *  Tenant Subscription Plans creation routing
+        // *****************************************************************
+
+        
+        Route::get('/subscribe/{plan}', [TenantSubscriptionController::class, 'subscribe'])
+            ->name('tenant.plans.subscribeTo');
+
         // ****************************************************************
         // *  Tenant Stripe Onboarding routing
         // *****************************************************************

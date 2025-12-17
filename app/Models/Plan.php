@@ -28,6 +28,7 @@ class Plan extends Model
 
         'active',
         'featured',
+        'price',  // The price for the plan
 
         'metadata',
     ];
