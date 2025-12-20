@@ -8,6 +8,7 @@ use App\Services\StripeMarketplaceOrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Stancl\Tenancy\Facades\Tenancy;
 
 class TenantSubscriptionController extends Controller
 {
@@ -19,7 +20,7 @@ class TenantSubscriptionController extends Controller
         $plans = Plan::query()
             ->where('tenant_id', $tenant->id)
             ->where('active', true)
-            ->orderBy('amount') // optional: if you have amount; otherwise change to ->orderBy('name')
+            ->orderBy('price') // optional: if you have amount; otherwise change to ->orderBy('name')
             ->get();
 
         return view('tenant.plans.index', [
@@ -70,7 +71,13 @@ class TenantSubscriptionController extends Controller
 
     public function subscribe(Request $request, Plan $plan)
     {
-        $tenant = Tenant::findByDomain($request->tenant); // Retrieve tenant from subdomain or path
+        // $tenant = Tenant::findByDomain($request->tenant); // Retrieve tenant from subdomain or path
+        $tenant = tenant();
+
+        if (! $tenant) {
+            abort(404, 'Tenant not resolved');
+        }
+
 
         // Get user if logged in, or null for anonymous users
         $user = auth()->user();
@@ -88,7 +95,13 @@ class TenantSubscriptionController extends Controller
      */
     public function editPrice(Request $request, Plan $plan)
     {
-        $tenant = Tenant::findByDomain($request->tenant); // Retrieve tenant from subdomain or path
+        // $tenant = Tenant::findByDomain($request->tenant); // Retrieve tenant from subdomain or path
+        $tenant = tenant();
+
+        if (! $tenant) {
+            abort(404, 'Tenant not resolved');
+        }
+
 
         return view('tenant.plans.edit_price', compact('plan', 'tenant'));
     }
@@ -99,7 +112,13 @@ class TenantSubscriptionController extends Controller
      */
     public function updatePrice(Request $request, Plan $plan)
     {
-        $tenant = Tenant::findByDomain($request->tenant); // Retrieve tenant from subdomain or path
+        // $tenant = Tenant::findByDomain($request->tenant); // Retrieve tenant from subdomain or path
+        $tenant = tenant();
+
+        if (! $tenant) {
+            abort(404, 'Tenant not resolved');
+        }
+
 
         // Validate price input
         $validated = $request->validate([
@@ -115,6 +134,118 @@ class TenantSubscriptionController extends Controller
                          ->with('success', 'Subscription price updated successfully.');
     }
 
+
+    /**
+     * Show the form for creating a new subscription plan.
+     */
+    public function create(Request $request)
+    {
+        // $tenant = Tenant::findByDomain($request->tenant);
+        $tenant = tenant();
+
+        if (! $tenant) {
+            abort(404, 'Tenant not resolved');
+        }
+
+
+        return view('tenant.plans.create', compact('tenant'));
+    }
+
+    /**
+     * Store a newly created subscription plan.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string|max:500',
+            'featured' => 'required|boolean',
+            'active' => 'required|boolean',
+        ]);        
+
+        // $tenant = Tenant::findByDomain($request->tenant);
+        $tenant = tenant();
+
+        if (! $tenant) {
+            abort(404, 'Tenant not resolved');
+        }
+
+
+        // Create the plan (Stripe integration handled in StripeMarketplaceOrderService)
+        $plan = Plan::create([
+            'name' => $validated['name'],
+            'stripe_price_id' => null,  // Stripe Price ID will be set later
+            'tenant_id' => $tenant->id,
+            'featured' => $validated['featured'],
+            'price' => $validated['price'],
+            'description' => $validated['description'],
+            'active' => $validated['active'],
+        ]);       
+
+        // After creating the plan, handle Stripe integration
+        $stripeService = new StripeMarketplaceOrderService();
+        $stripePriceId = $stripeService->createStripePrice($plan);
+
+        // Update the plan with the Stripe price ID
+        $plan->update(['stripe_price_id' => $stripePriceId]);
+
+        return redirect()->route('tenant.plans.index', ['tenant' => $tenant->id])
+                         ->with('success', 'Subscription plan created successfully.');
+    }
+
+
+    /**
+     * Show the form for editing a subscription plan.
+     */
+    public function edit(Request $request, Plan $plan)
+    {
+        // $tenant = Tenant::findByDomain($request->tenant);
+        $tenant = tenant();
+
+        if (! $tenant) {
+            abort(404, 'Tenant not resolved');
+        }
+
+
+        return view('tenant.plans.edit', compact('plan', 'tenant'));
+    }
+
+    /**
+     * Update the subscription plan.
+     */
+    public function update(Request $request, Plan $plan)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string|max:500',
+            'featured' => 'required|boolean',
+            'active' => 'required|boolean',
+        ]);
+
+        // $tenant = Tenant::findByDomain($request->tenant);
+        $tenant = tenant();
+
+        if (! $tenant) {
+            abort(404, 'Tenant not resolved');
+        }
+
+
+        // Update plan fields
+        $plan->update([
+            'name' => $validated['name'],
+            'price' => $validated['price'],
+            'description' => $validated['description'],
+            'featured' => $validated['featured'],
+            'active' => $validated['active'],
+        ]);
+
+        // Optionally, you can also handle updating Stripe price if needed
+
+        return redirect()->route('tenant.plans.index', ['tenant' => $tenant->slug])
+                         ->with('success', 'Subscription plan updated successfully.');
+    }
     
     
 }

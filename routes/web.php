@@ -75,6 +75,12 @@ Route::prefix('{tenant}')
             require __DIR__ . '/tenant_auth.php';
         }
 
+        // Return URLs from Stripe Checkout
+        Route::get('/subscribe/success', [TenantSubscribeReturnController::class, 'success'])
+            ->name('tenant.subscribe.success');
+
+        Route::get('/subscribe/cancel', [TenantSubscribeReturnController::class, 'cancel'])
+            ->name('tenant.subscribe.cancel');
        
 
         // ****************************************************************
@@ -83,6 +89,11 @@ Route::prefix('{tenant}')
 
         // Route::get('/plans', [TenantSubscriptionController::class, 'index'])
         //     ->name('tenant.plans.index');
+        // Route::get('/plans', [TenantSubscriptionController::class, 'index'])->name('tenant.plans.index');
+        Route::get('/plans/create', [TenantSubscriptionController::class, 'create'])->name('tenant.plans.create');
+        Route::post('/plans/create', [TenantSubscriptionController::class, 'store'])->name('tenant.plans.store');
+        Route::get('/plans/{plan}/edit', [TenantSubscriptionController::class, 'edit'])->name('tenant.plans.edit');
+        Route::put('/plans/{plan}', [TenantSubscriptionController::class, 'update'])->name('tenant.plans.update');
         Route::get('/plans/{plan}/edit-price', [TenantSubscriptionController::class, 'editPrice'])
             ->name('tenant.plans.edit_price');
         Route::put('/plans/{plan}/update-price', [TenantSubscriptionController::class, 'updatePrice'])
@@ -151,17 +162,6 @@ Route::prefix('{tenant}')
         Route::post('/plans/{plan}/subscribe', [TenantSubscriptionController::class, 'start'])
             ->middleware('auth') // recommended: user must be logged in to subscribe
             ->name('tenant.plans.subscribe');
-
-        // Return URLs from Stripe Checkout
-        Route::get('/subscribe/success', [TenantSubscribeReturnController::class, 'success'])
-            ->name('tenant.subscribe.success');
-
-        Route::get('/subscribe/cancel', [TenantSubscribeReturnController::class, 'cancel'])
-            ->name('tenant.subscribe.cancel');
-
-
-
-
 
             
 

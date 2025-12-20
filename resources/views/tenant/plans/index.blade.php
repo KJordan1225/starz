@@ -8,10 +8,20 @@
     $tenantId = $tenantService->getTenantId();
 @endphp
 
-
 <div class="container py-5">
 
-    <a href="{{ route('tenant.plans.edit_price', ['tenant' => $tenant->ID, 'plan' => $plan->id]) }}" class="btn btn-warning">Edit Price</a>
+    <!-- Display session errors if there are any -->
+    @if(session('errors'))
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach(session('errors')->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <a href="#" class="btn btn-warning">Edit Price</a>
 
     <div class="row mb-4">
         <div class="col text-center">
@@ -56,10 +66,10 @@
                                 </p>
                             @endif
 
-                            @if($plan->amount)
+                            @if($plan->price)
                                 <div class="mb-3">
                                     <span class="fs-3 fw-bold">
-                                        ${{ number_format($plan->amount / 100, 2) }}
+                                        ${{ number_format($plan->price / 100, 2) }}
                                     </span>
                                     <span class="text-muted">
                                         / {{ ucfirst($plan->interval) }}
@@ -79,7 +89,7 @@
                                         </button>
                                     </form>
                                 @else
-                                    <a href="{{ route('login') }}"
+                                    <a href="{{ route('tenant.login', ['tenant'=> $tenantId]) }}"
                                        class="btn btn-outline-secondary w-100">
                                         Log in to Subscribe
                                     </a>

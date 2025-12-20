@@ -27,13 +27,7 @@
                             View Exclusive Videos
                         </a>
 
-                        <a href="{{ route('tenant.orders.create', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">
-                            [Stripe] Subscribe
-                        </a>
-
-                        <a href="{{ route('tenant.stripe.subscriptions.index', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">
-                            [Stripe] Manage Subscription
-                        </a>
+                        
                     </div>
 
                 </div>

@@ -23,7 +23,7 @@
                     <a href="{{ route('tenant.carousel.edit', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Upload Homepage Preview Images</a>
                     <a href="{{ route('tenant.carousel.images.index', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Manage Homepage Preview Images</a>
                     <a href="{{ route('tenant.stripe.connect.index', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Onboard with Stripe</a>
-                    <a href="{{ route('tenant.plans.edit_price', ['tenant' => $tenantId, 'plan' => 2]) }}" class="btn btn-outline-primary mb-3 w-100">Configure Subscription Price</a>
+                    <a href="{{ route('tenant.plans.create', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">Create/Configure Subscription Price</a>
                     <a href="{{ route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">
                         View Exclusive Images
                     </a>

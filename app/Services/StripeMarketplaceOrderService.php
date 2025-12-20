@@ -7,6 +7,9 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Stripe\StripeClient;
+use Stripe\Stripe;
+use Stripe\Product;
+use Stripe\Price;
 
 class StripeMarketplaceOrderService
 {
@@ -127,4 +130,35 @@ class StripeMarketplaceOrderService
 
         return rtrim((string) config('stripe_marketplace.cancel_url'), '/');
     }
+
+
+    /**
+     * Create Stripe price for a new plan.
+     */
+    public function createStripePrice($plan)
+    {
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        // Create the product in Stripe
+        $product = Product::create([
+            'name' => $plan->name,
+            'description' => $plan->description,
+        ]);
+
+        // Create the price associated with the product
+        $price = Price::create([
+            'unit_amount' => $plan->price * 100, // Price in cents
+            'currency' => 'usd',
+            'product' => $product->id,
+            'recurring' => [
+                'interval' => 'month',
+                // 'interval_count' => 1, // optional
+            ],
+        ]);
+
+        return $price->id;  // Return the Stripe price ID
+    }
+
+
+    
 }
