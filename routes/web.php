@@ -31,6 +31,10 @@ if (file_exists(__DIR__ . '/auth.php')) {
     require __DIR__ . '/auth.php';
 } 
 
+// routes/web.php (or api.php)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook');
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -361,9 +365,6 @@ Route::prefix('{tenant}')
             ->name('tenant.videos.display');
 
 
-    });
-
-    Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
-        ->name('stripe.webhook');
+    });    
 
 require __DIR__.'/auth.php';

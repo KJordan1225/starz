@@ -13,6 +13,9 @@
     <div class="row justify-content-center">
         <div class="col-md-7 col-lg-6">
 
+        <a href="{{ route('tenant.user.home', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary mb-3 w-100">User Dashboard</a>
+        &nbsp;&nbsp;
+
             <div class="card shadow-sm text-center">
                 <div class="card-body p-4">
                     
@@ -56,7 +59,7 @@
                            class="btn btn-primary">
                             Go to {{ $tenant->id }} dashboard
                         </a>                        
-                    </div>
+                    </div>                   
 
                 </div>
             </div>

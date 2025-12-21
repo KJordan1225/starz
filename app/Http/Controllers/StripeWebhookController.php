@@ -12,6 +12,7 @@ class StripeWebhookController extends Controller
 {
     public function handle(Request $request): Response
     {
+          
         $payload   = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
         $secret    = config('services.stripe.webhook_secret');

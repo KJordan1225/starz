@@ -31,11 +31,15 @@ class EnsureUserSubscribedToTenant
                 ->firstOrFail();
         }
 
+        if ($user->hasRole('super-admin')) {
+			return $next($request);
+		}
+
         if (! $user->hasActiveSubscriptionForTenant($tenant)) {
             return redirect()
                 ->route('tenant.plans.index', ['tenant' => $tenant->id])
                 ->with('error', 'You must subscribe to access this content.');
-        }
+        }        
 
         return $next($request);
     }
