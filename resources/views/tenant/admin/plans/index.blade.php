@@ -44,7 +44,7 @@
 
                         <td>
                             <span class="fw-semibold">
-                                ${{ number_format(($plan->amount ?? 0) / 100, 2) }}
+                                ${{ number_format(($plan->price ?? 0), 2) }}
                             </span>
                             <span class="text-muted">/ {{ ucfirst($plan->interval) }}</span>
                             <div class="text-muted small">{{ strtoupper($plan->currency) }}</div>

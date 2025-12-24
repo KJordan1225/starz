@@ -8,14 +8,14 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('plans', function (Blueprint $table) {
-            $table->softDeletes(); // adds deleted_at
+            $table->string('stripe_price_id')->nullable()->change();
         });
     }
 
     public function down(): void
     {
         Schema::table('plans', function (Blueprint $table) {
-            $table->dropSoftDeletes();
+            $table->string('stripe_price_id')->nullable(false)->change();
         });
     }
 };

@@ -81,7 +81,7 @@ class Plan extends Model
         return sprintf(
             '%s%.2f / %s',
             strtoupper($this->currency) === 'USD' ? '$' : strtoupper($this->currency) . ' ',
-            $this->amount / 100,
+            $this->price / 100,
             $this->interval
         );
     }

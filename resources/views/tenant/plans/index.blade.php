@@ -69,7 +69,7 @@
                             @if($plan->price)
                                 <div class="mb-3">
                                     <span class="fs-3 fw-bold">
-                                        ${{ number_format($plan->price / 100, 2) }}
+                                        ${{ number_format($plan->price, 2) }}
                                     </span>
                                     <span class="text-muted">
                                         / {{ ucfirst($plan->interval) }}

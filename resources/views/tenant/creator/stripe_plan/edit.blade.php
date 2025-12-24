@@ -59,7 +59,7 @@
                                            min="1"
                                            name="amount"
                                            class="form-control @error('amount') is-invalid @enderror"
-                                           value="{{ old('amount', $plan->amount ? number_format($plan->amount / 100, 2, '.', '') : '') }}"
+                                           value="{{ old('amount', $plan->amount ? number_format($plan->price, 2, '.', '') : '') }}"
                                            required>
                                 </div>
                                 <div class="form-text">
