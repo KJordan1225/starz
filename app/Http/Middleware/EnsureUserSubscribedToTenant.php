@@ -46,6 +46,7 @@ class EnsureUserSubscribedToTenant
         }
 
         // 5) Gate: user must have an active subscription to *this* tenant
+        
         if (! $user->hasActiveSubscriptionForTenant($tenant)) {
             // Optional: end tenancy context before redirect (keeps redirects clean)
             $tenancy->end();

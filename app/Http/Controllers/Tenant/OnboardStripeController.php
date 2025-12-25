@@ -11,6 +11,7 @@ class OnboardStripeController extends Controller
 {
     public function start(Request $request)
     {
+        
         $tenantId = tenant('id');
         $tenant   = Tenant::findOrFail($tenantId);
 

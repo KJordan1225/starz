@@ -161,7 +161,7 @@ class User extends Authenticatable
     public function hasActiveSubscriptionForTenant(Tenant $tenant): bool
     {
         /** @var StripeSubscriptionStatusService $service */
-        $service = app(StripeSubscriptionStatusService::class);
+        $service = app(StripeSubscriptionStatusService::class);      
 
         return $service->isActiveForUserAndTenant($this, $tenant);
     }

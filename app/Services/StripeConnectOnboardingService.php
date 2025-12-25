@@ -26,7 +26,7 @@ class StripeConnectOnboardingService
         if ($tenant->stripe_account_id) {
             return $tenant;
         }
-
+        
         $account = $this->stripe->accounts->create([
             'type' => 'express', // express recommended for creators
             'capabilities' => [
@@ -42,7 +42,7 @@ class StripeConnectOnboardingService
 
         $tenant->forceFill([
             'stripe_account_id' => $account->id,
-        ])->save();
+        ])->save(); 
 
         return $tenant;
     }

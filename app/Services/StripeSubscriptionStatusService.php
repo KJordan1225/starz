@@ -31,38 +31,59 @@ class StripeSubscriptionStatusService
 
     public function isActiveForUserAndTenant(User $user, Tenant $tenant): bool
     {
+        
         // 1) Must have a connected account (if your subscriptions live on tenant accounts)
         if (empty($tenant->stripe_account_id)) {
             return false;
         }
-
+        // dd('isActiveForUserAndTenant-true');
         // 2) Latest subscription order for this user + tenant
+        
         $order = Order::query()
             ->where('order_type', 'subscription')
             ->where('tenant_id', $tenant->id)
             ->where('user_id', $user->id)
             ->whereNotNull('stripe_subscription_id')
-            ->latest('created_at')
             ->first();
 
         if (! $order) {
             return false;
-        }
+        }          
+        
+        
+
+        // try {
+            
+        //     // 3) Retrieve subscription from the TENANT'S connected Stripe account
+        //     $subscription = $this->stripe->subscriptions->retrieve(
+        //         $order->stripe_subscription_id,
+        //         [], // params
+        //         ['stripe_account' => $tenant->stripe_account_id] // <-- CRITICAL            
+        //     );
+        // } catch (ApiErrorException $e) {
+        //     // Optional: fallback to your local order status if you keep it in sync via webhooks
+        //     // return in_array($order->status, ['active'], true);
+
+        //     dd('Stripe API error: ' . $e->getMessage());
+        //     return false;
+        // }
 
         try {
-            // 3) Retrieve subscription from the TENANT'S connected Stripe account
             $subscription = $this->stripe->subscriptions->retrieve(
-                $order->stripe_subscription_id,
-                [], // params
-                ['stripe_account' => $tenant->stripe_account_id] // <-- CRITICAL
+                $order->stripe_subscription_id // no 3rd options param
             );
-        } catch (ApiErrorException $e) {
-            // Optional: fallback to your local order status if you keep it in sync via webhooks
-            // return in_array($order->status, ['active'], true);
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            \Log::error('Stripe subscription retrieve failed (platform)', [
+                'subscription_id' => $order->stripe_subscription_id,
+                'error'           => $e->getMessage(),
+            ]);
 
+            dd('Stripe API error: ' . $e->getMessage());
             return false;
         }
 
+
+        // return true;
         return in_array($subscription->status, ['active', 'trialing'], true);
     }
 

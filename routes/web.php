@@ -344,7 +344,7 @@ Route::prefix('{tenant}')
 
         // Display all tenant images in rows of 4
         Route::get('/creator/images/display', [PrivateTenantImagesController::class, 'creatorImagePageTwo'])
-            // ->middleware('subscribed.to.tenant')
+            ->middleware('subscribed.to.tenant')
             ->name('tenant.creator.images.creatorImagePageTwo');
 
         Route::get('/creator/video', [TenantCarouselController::class, 'videoEdit'])

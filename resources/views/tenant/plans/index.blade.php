@@ -21,7 +21,7 @@
         </div>
     @endif
 
-    <a href="#" class="btn btn-warning">Edit Price</a>
+    
 
     <div class="row mb-4">
         <div class="col text-center">
