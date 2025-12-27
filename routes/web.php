@@ -20,6 +20,7 @@ use App\Http\Controllers\TenantCarouselImageController;
 use App\Http\Controllers\TenantStripeConnectController;
 use App\Http\Controllers\Tenant\OnboardStripeController;
 use App\Http\Controllers\TenantExclusiveImageController;
+use App\Http\Controllers\TenantExclusiveVideoController;
 use App\Http\Controllers\Tenant\TenantCarouselController;
 use App\Http\Controllers\TenantSubscribeReturnController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -79,6 +80,15 @@ Route::prefix('{tenant}')
         if (file_exists(__DIR__ . '/tenant_auth.php')) {
             require __DIR__ . '/tenant_auth.php';
         }
+
+        // *******************************************************************
+        // * Delete exclusive videos
+        // ******************************************************************** 
+        Route::get('/exclusive/videos', [TenantExclusiveVideoController::class, 'index'])
+            ->name('tenant.exclusive.videos.index');
+
+        Route::delete('/exclusive/videos/{media}', [TenantExclusiveVideoController::class, 'destroy'])
+            ->name('tenant.exclusive.videos.destroy');
 
         // *******************************************************************
         // * Cancel Subcription Routes
