@@ -1,10 +1,13 @@
 @extends('layouts.landlord')
 
 @section('content')
+
 @php
-    // Resolve tenant id from route or URL
-    $tenantId = request()->segment(1) ?: request()->route('tenant');    
+    use App\Services\TenantService;
+    $tenantService = new TenantService();
+    $tenantId = $tenantService->getTenantId();
 @endphp
+
 
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -21,10 +24,13 @@
                         <a href="{{ route('tenant.creator.images.creatorImagePageTwo', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">
                             View Exclusive Images
                         </a>
-
                         
                         <a href="{{ route('tenant.videos.display', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">
                             View Exclusive Videos
+                        </a>
+
+                        <a href="{{ route('tenant.subscriptions.cancel.show', ['tenant' => $tenantId]) }}" class="btn btn-outline-primary btn-lg">
+                            Cancel Subscription
                         </a>
 
                         

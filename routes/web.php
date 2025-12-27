@@ -25,6 +25,7 @@ use App\Http\Controllers\TenantSubscribeReturnController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Tenant\StripeCreatorPlanController;;
 use App\Http\Controllers\Tenant\StripeTenantSubscriptionController;
+use App\Http\Controllers\Tenant\TenantSubscriptionCancelController;
 
 
 if (file_exists(__DIR__ . '/auth.php')) {
@@ -78,6 +79,20 @@ Route::prefix('{tenant}')
         if (file_exists(__DIR__ . '/tenant_auth.php')) {
             require __DIR__ . '/tenant_auth.php';
         }
+
+        // *******************************************************************
+        // * Cancel Subcription Routes
+        // ********************************************************************      
+        // Show cancellation options page
+        Route::get('/subscriptions/cancel', [TenantSubscriptionCancelController::class, 'show'])
+            ->name('tenant.subscriptions.cancel.show');
+        // Cancel at period end
+        Route::post('/subscriptions/cancel/period-end', [TenantSubscriptionCancelController::class, 'cancelAtPeriodEnd'])
+            ->name('tenant.subscriptions.cancel.period_end');
+        // Cancel immediately
+        Route::post('/subscriptions/cancel/now', [TenantSubscriptionCancelController::class, 'cancelNow'])
+            ->name('tenant.subscriptions.cancel.now');
+
 
         // Return URLs from Stripe Checkout
         Route::get('/subscribe/success', [TenantSubscribeReturnController::class, 'success'])
