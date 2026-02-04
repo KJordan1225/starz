@@ -5,6 +5,10 @@
     use App\Services\TenantService;
     $tenantService = new TenantService();
     $tenantId = $tenantService->getTenantId();
+
+    if ($tenantId === null) {
+        $tenantId = request()->segment(1);
+    }
 @endphp
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -28,7 +32,7 @@
                         {{-- Email --}}
                         <div class="mb-3">
                             <label for="email" class="form-label">
-                                Email Address [Auth]
+                                Email Address
                             </label>
                             <input
                                 id="email"

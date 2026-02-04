@@ -18,6 +18,10 @@
         use App\Services\TenantService;
         $tenantService = new TenantService();
         $tenantId = $tenantService->getTenantId();
+
+        if ($tenantId === null) {
+            $tenantId = request()->segment(1);
+        }
     @endphp
 
     <div class="container-fluid g-0 flex-fill">

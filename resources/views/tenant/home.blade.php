@@ -39,7 +39,11 @@
             No carousel images uploaded yet for this microsite.
         </p>
     @endif
-
+    @php
+        if ($tenantId===null) {
+            $tenantId = request()->segment(1);
+        }
+    @endphp
     <div class="text-center">
         <h3>Login (or Register) to view more of this model</h3>
         <a href="{{ route('tenant.login', ['tenant'=> $tenantId]) }}" class="btn btn-primary me-2">Login</a>

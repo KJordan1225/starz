@@ -1,8 +1,20 @@
 @extends('layouts.landlord')
 
 @section('content')
+
+@php
+    use App\Services\TenantService;
+    $tenantService = new TenantService();
+    $tenantId = $tenantService->getTenantId();
+@endphp
+
     <div class="container">
         <h1>Create New Subscription Plan</h1>
+
+        <a href="{{ route('tenant.admin.home', ['tenant' => $tenantId]) }}"
+            class="btn btn-outline-primary mb-3 w-100">
+            Admin Dashboard
+        </a>
 
         <form method="POST" action="{{ route('tenant.plans.store', ['tenant' => $tenant->id]) }}">
             @csrf
